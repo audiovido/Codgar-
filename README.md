@@ -11,15 +11,15 @@
 ### ۱. دستور تک‌خطی برای مک و لینوکس (Terminal):
 
 ```bash
-git clone https://github.com/audiovido/CODGAR----V2.git && cd CODGAR----V2 && ./install.sh
+git clone https://github.com/audiovido/Codgar-.git && cd Codgar- && ./install.sh
 ```
 
 ### ۲. یا با دستور استاندارد NPM (در صورت داشتن Node.js):
 
 ```bash
 # ۱. کلون کردن مخزن
-git clone https://github.com/audiovido/CODGAR----V2.git
-cd CODGAR----V2
+git clone https://github.com/audiovido/Codgar-.git
+cd Codgar-
 
 # ۲. اجرای خودکار نصب پکیج‌ها و کانفیگ
 npm run setup
@@ -79,4 +79,3 @@ ANTHROPIC_API_KEY="کلید_کلود_اختیاری"
 - `src/`: کامپوننت‌های فرانت‌اند (React 19, Motion, Lucide Icons, Tailwind CSS v4).
 - `install.sh` / `install.bat`: اسکریپت‌های نصب و اجرای تک‌کلیک روی سیستم‌های خام.
 - `BACKEND_ARCHITECTURE.md`: مستند کامل ریزبه‌ریز تمامی اندپوینت‌های API و کارکرد روترها.
-
