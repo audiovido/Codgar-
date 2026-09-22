@@ -966,6 +966,7 @@ export default function Website() {
         .replace(/آ/g, 'ا')
         .toLowerCase();
 
+      const isPetShop = /پت[\s]*شاپ|pet[\s]*shop|حیوان|حیوانات|سگ|گربه|پرنده|غذای[\s]*سگ|غذای[\s]*گربه|دامپزشک|petshop/i.test(normalizedPrompt);
       const isFinanceOrBudget = /مالی|بودجه|بودجه[\s]*بندی|تراکنش|درآمد|مخارج|حسابداری|کیف[\s]*پول|finance|budget|wallet|expense|income|transaction/i.test(normalizedPrompt);
       const isSnappOrDelivery = /اسنپ|snapp|snap|تپسی|tapsi|تاکسی[\s]*اینترنتی|پیک|سوپراپ|superapp/i.test(normalizedPrompt) || /اسنپ|snapp/i.test(combinedText);
       const isEcommerceOrDigikala = /دیجی[\s]*کالا|digikala|digi[\s_-]*kala|فروشگاه|فروشگاهی|ecommerce|e-commerce|shop|store|مارکت|market|foroshgah|دیجیکالا|خرید[\s]*انلاین/i.test(normalizedPrompt) || /دیجی[\s]*کالا|digikala/i.test(combinedText);
@@ -980,7 +981,485 @@ export default function Website() {
       let componentCode = "";
       let componentName = "CustomApp";
 
-      if (isFinanceOrBudget && !isCrypto) {
+      if (isPetShop) {
+        componentName = "PetShopStore";
+        componentCode = `import React, { useState } from 'react';
+import { ShoppingBag, Heart, Search, Star, Sparkles, Plus, Minus, Trash2, ShieldCheck, Truck, PhoneCall, Check, X, Tag, Scissors, Stethoscope, Award, Flame } from 'lucide-react';
+
+export default function PetShopStore() {
+  const [selectedPet, setSelectedPet] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [cart, setCart] = useState<{ id: number; name: string; price: number; oldPrice: number; qty: number; image: string }[]>([]);
+  const [showCart, setShowCart] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(false);
+  const [favorites, setFavorites] = useState<Record<number, boolean>>({});
+
+  const products = [
+    {
+      id: 1,
+      name: 'غذای خشک سگ بالغ نژاد متوسط رویال کنین مدل Medium Adult',
+      petType: 'dog',
+      category: 'food',
+      price: 1850000,
+      oldPrice: 2100000,
+      discount: 12,
+      image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=600&auto=format&fit=crop&q=80',
+      tag: 'پرفروش‌ترین',
+      rating: 4.9,
+      reviews: 320,
+      weight: 'وزن: ۴ کیلوگرم',
+      brand: 'Royal Canin (فرانسه)',
+      inStock: true
+    },
+    {
+      id: 2,
+      name: 'تشویقی سگ مغزدار جیم داگ با طعم مرغ و پنیر GimDog',
+      petType: 'dog',
+      category: 'snack',
+      price: 240000,
+      oldPrice: 280000,
+      discount: 14,
+      image: 'https://images.unsplash.com/photo-1568640347023-a616a30bc3bd?w=600&auto=format&fit=crop&q=80',
+      tag: 'محبوب سگ‌ها',
+      rating: 4.8,
+      reviews: 145,
+      weight: 'وزن: ۱۵۰ گرم',
+      brand: 'GimDog (آلمان)',
+      inStock: true
+    },
+    {
+      id: 3,
+      name: 'غذای خشک گربه عقیم‌شده رویال کنین مدل Sterilised 37',
+      petType: 'cat',
+      category: 'food',
+      price: 2200000,
+      oldPrice: 2450000,
+      discount: 10,
+      image: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=600&auto=format&fit=crop&q=80',
+      tag: 'ویژه گربه عقیم',
+      rating: 4.9,
+      reviews: 410,
+      weight: 'وزن: ۴ کیلوگرم',
+      brand: 'Royal Canin (فرانسه)',
+      inStock: true
+    },
+    {
+      id: 4,
+      name: 'خاک گربه گرانول معطر بنتونیت دانه کربنه بدون گردوغبار',
+      petType: 'cat',
+      category: 'hygiene',
+      price: 195000,
+      oldPrice: 230000,
+      discount: 15,
+      image: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=600&auto=format&fit=crop&q=80',
+      tag: 'تخفیف ویژه',
+      rating: 4.7,
+      reviews: 580,
+      weight: 'وزن: ۱۰ کیلوگرم',
+      brand: 'Pettex Carbon',
+      inStock: true
+    },
+    {
+      id: 5,
+      name: 'اسباب‌بازی تعاملی برج توپ و فنر فنری گربه مدل FunTower',
+      petType: 'cat',
+      category: 'toy',
+      price: 340000,
+      oldPrice: 390000,
+      discount: 12,
+      image: 'https://images.unsplash.com/photo-1545249390-6bdfa286032f?w=600&auto=format&fit=crop&q=80',
+      tag: 'سرگرمی عالی',
+      rating: 4.6,
+      reviews: 95,
+      weight: '۳ طبقه گردان',
+      brand: 'Petstages',
+      inStock: true
+    },
+    {
+      id: 6,
+      name: 'غذای کامل پرندگان زینتی و طوطی‌سانان مدل پلت پادوان Padovan',
+      petType: 'bird',
+      category: 'food',
+      price: 480000,
+      oldPrice: 530000,
+      discount: 9,
+      image: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=600&auto=format&fit=crop&q=80',
+      tag: 'ویتامینه غنی',
+      rating: 4.8,
+      reviews: 110,
+      weight: 'وزن: ۱ کیلوگرم',
+      brand: 'Padovan (ایتالیا)',
+      inStock: true
+    },
+  ];
+
+  const petTabs = [
+    { id: 'all', label: 'همه حیوانات', emoji: '🐾' },
+    { id: 'dog', label: 'سگ‌ها', emoji: '🐶' },
+    { id: 'cat', label: 'گربه‌ها', emoji: '🐱' },
+    { id: 'bird', label: 'پرندگان', emoji: '🦜' },
+  ];
+
+  const categoryFilters = [
+    { id: 'all', label: 'همه دسته‌ها' },
+    { id: 'food', label: 'غذای اصلی' },
+    { id: 'snack', label: 'تشویقی و اسنک' },
+    { id: 'hygiene', label: 'بهداشت و مراقبت' },
+    { id: 'toy', label: 'اسباب‌بازی و سرگرمی' },
+  ];
+
+  const filteredProducts = products.filter(p => {
+    const matchPet = selectedPet === 'all' || p.petType === selectedPet;
+    const matchCat = selectedCategory === 'all' || p.category === selectedCategory;
+    const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        p.brand.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchPet && matchCat && matchSearch;
+  });
+
+  const addToCart = (product: typeof products[0]) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+      }
+      return [...prev, { id: product.id, name: product.name, price: product.price, oldPrice: product.oldPrice, image: product.image, qty: 1 }];
+    });
+  };
+
+  const updateQty = (id: number, delta: number) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = item.qty + delta;
+        return newQty > 0 ? { ...item, qty: newQty } : null;
+      }
+      return item;
+    }).filter(Boolean) as typeof cart);
+  };
+
+  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+  const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const totalSavings = cart.reduce((sum, item) => sum + ((item.oldPrice - item.price) * item.qty), 0);
+
+  const formatPrice = (p: number) => new Intl.NumberFormat('fa-IR').format(p) + ' تومان';
+
+  return (
+    <div className="min-h-screen bg-amber-50/40 text-slate-800 font-sans antialiased selection:bg-amber-500 selection:text-white pb-24" dir="rtl">
+      
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 text-xs font-black py-2.5 px-4 text-center flex items-center justify-center gap-2 shadow-sm">
+        <Sparkles className="w-4 h-4 text-slate-950" />
+        <span>پت‌شاپ آنلاین پاموک | ارسال فوری و رایگان بالای ۴۰۰ هزار تومان با ضمانت اصالت ۱۰۰٪</span>
+      </div>
+
+      {/* Main Header */}
+      <header className="bg-white border-b border-amber-100 sticky top-0 z-40 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+          
+          {/* Logo */}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-amber-500/25">
+              🐾
+            </div>
+            <div>
+              <span className="font-black text-xl text-slate-900 block leading-tight">پت‌شاپ پاموک</span>
+              <span className="text-[11px] text-amber-600 font-bold">فروشگاه تخصصی ملزومات حیوانات خانگی</span>
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="flex-1 max-w-xl relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="جستجو در بین غذا، تشویقی، خاک، اسباب‌بازی و برندها..."
+              className="w-full bg-slate-100/90 focus:bg-white text-slate-800 text-xs sm:text-sm rounded-2xl py-3 pr-11 pl-4 border border-transparent focus:border-amber-500 outline-none transition shadow-inner"
+            />
+            <Search className="w-5 h-5 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2" />
+          </div>
+
+          {/* Cart Button */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowCart(true)}
+              className="relative p-3 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer flex items-center gap-2"
+            >
+              <ShoppingBag className="w-5 h-5 text-amber-600" />
+              <span className="text-xs font-black hidden sm:inline">سبد خرید</span>
+              {totalItems > 0 && (
+                <span className="w-5 h-5 bg-orange-600 text-white text-[11px] font-black rounded-full flex items-center justify-center shadow-md animate-bounce">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Pet Tabs */}
+        <div className="border-t border-slate-100 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-2 overflow-x-auto py-2.5 scrollbar-none">
+            {petTabs.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setSelectedPet(tab.id)}
+                className={\`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black whitespace-nowrap transition cursor-pointer \${
+                  selectedPet === tab.id
+                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/70'
+                }\`}
+              >
+                <span>{tab.emoji}</span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Banner with Grooming & Clinic Badges */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 my-6">
+        <div className="rounded-3xl bg-gradient-to-r from-amber-600 via-orange-500 to-amber-500 p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+          <div className="space-y-3 z-10 text-center md:text-right">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-black">
+              <Flame className="w-4 h-4 text-amber-200 fill-current" />
+              <span>تخفیف ویژه ماهانه غذای حیوانات</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-black leading-tight">سلامت و شادی پت دلبند شما در اولویت ماست</h2>
+            <p className="text-xs sm:text-sm text-amber-100 max-w-xl leading-relaxed">
+              ارائه برترین برندهای اورجینال غذای سگ، گربه، پرندگان، ملزومات بهداشتی و مشاوره رایگان دامپزشکی آنلاین.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 z-10">
+            <div className="flex items-center gap-3 bg-white/15 backdrop-blur-md p-3.5 rounded-2xl border border-white/20">
+              <Stethoscope className="w-8 h-8 text-amber-200" />
+              <div className="text-right">
+                <span className="text-xs font-black block">مشاوره دامپزشک</span>
+                <span className="text-[10px] text-amber-100">پاسخگویی سریع آنلاین</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 bg-white/15 backdrop-blur-md p-3.5 rounded-2xl border border-white/20">
+              <Scissors className="w-8 h-8 text-amber-200" />
+              <div className="text-right">
+                <span className="text-xs font-black block">گرومینگ و اصلاح</span>
+                <span className="text-[10px] text-amber-100">رزرو آنلاین خدمات</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories Filter Pills */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-6">
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          {categoryFilters.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={\`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap \${
+                selectedCategory === cat.id
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+              }\`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* Product Grid */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="font-black text-lg text-slate-900 flex items-center gap-2">
+            <span>🐾</span>
+            <span>لیست کالاهای منتخب پت‌شاپ</span>
+          </h3>
+          <span className="text-xs text-slate-500 font-bold">
+            نمایش {filteredProducts.length} محصول
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map(product => {
+            const isFav = favorites[product.id];
+            return (
+              <div
+                key={product.id}
+                className="bg-white rounded-3xl border border-amber-100/90 hover:border-amber-300 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between overflow-hidden group p-5"
+              >
+                <div>
+                  <div className="relative rounded-2xl overflow-hidden bg-slate-100 aspect-4/3 mb-4">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    {product.discount > 0 && (
+                      <span className="absolute top-3 right-3 bg-orange-600 text-white font-black text-xs px-2.5 py-1 rounded-xl shadow-md">
+                        {product.discount}٪ تخفیف
+                      </span>
+                    )}
+                    <button
+                      onClick={() => setFavorites(prev => ({ ...prev, [product.id]: !prev[product.id] }))}
+                      className="absolute top-3 left-3 w-8 h-8 rounded-xl bg-white/90 backdrop-blur-md flex items-center justify-center text-slate-600 hover:text-rose-600 transition shadow-sm cursor-pointer"
+                    >
+                      <Heart className={\`w-4 h-4 \${isFav ? 'fill-current text-rose-600' : ''}\`} />
+                    </button>
+                  </div>
+
+                  <span className="inline-block text-[10px] font-extrabold text-amber-700 bg-amber-100/80 px-2 py-0.5 rounded-md mb-2">
+                    {product.brand}
+                  </span>
+                  <h4 className="font-black text-sm text-slate-900 leading-snug line-clamp-2 mb-2">
+                    {product.name}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-medium mb-3">
+                    {product.weight}
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 mb-3">
+                    <div className="flex items-center gap-1 text-amber-500 font-bold">
+                      <Star className="w-3.5 h-3.5 fill-current" />
+                      <span>{product.rating}</span>
+                      <span className="text-slate-400 font-normal">({product.reviews})</span>
+                    </div>
+                    <span className="text-emerald-600 font-bold flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      <span>ضمانت اصالت کالا</span>
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      {product.oldPrice > product.price && (
+                        <span className="text-[11px] text-slate-400 line-through block font-mono">
+                          {formatPrice(product.oldPrice)}
+                        </span>
+                      )}
+                      <span className="text-sm sm:text-base font-black text-slate-900 block font-mono">
+                        {formatPrice(product.price)}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => addToCart(product)}
+                      className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-black shadow-md shadow-amber-500/20 active:scale-95 transition cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>خرید</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </main>
+
+      {/* Cart Drawer */}
+      {showCart && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex justify-end">
+          <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between p-6 animate-in slide-in-from-left duration-300">
+            <div>
+              <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+                <div className="flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-amber-600" />
+                  <h3 className="font-black text-base text-slate-900">سبد خرید ملزومات پت</h3>
+                  <span className="text-xs bg-amber-100 text-amber-800 font-black px-2 py-0.5 rounded-md">
+                    {totalItems} قلم
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowCart(false)}
+                  className="p-2 rounded-xl hover:bg-slate-100 text-slate-500 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="mt-4 space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                {cart.length === 0 ? (
+                  <div className="text-center py-16 text-slate-400">
+                    <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-30 text-amber-600" />
+                    <p className="text-sm font-bold">سبد خرید شما خالی است</p>
+                    <p className="text-xs mt-1">غذای محبوب یا اسباب‌بازی مورد علاقه پت خود را اضافه کنید.</p>
+                  </div>
+                ) : (
+                  cart.map(item => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 bg-amber-50/50 rounded-2xl border border-amber-100">
+                      <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-xl shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <h5 className="font-bold text-xs text-slate-900 truncate mb-1">{item.name}</h5>
+                        <span className="text-xs font-black text-amber-800 block mb-2">{formatPrice(item.price)}</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => updateQty(item.id, -1)}
+                            className="w-6 h-6 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center hover:bg-slate-100 cursor-pointer"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="text-xs font-black px-1">{item.qty}</span>
+                          <button
+                            onClick={() => updateQty(item.id, 1)}
+                            className="w-6 h-6 rounded-lg bg-white border border-slate-300 text-slate-700 flex items-center justify-center hover:bg-slate-100 cursor-pointer"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {cart.length > 0 && (
+              <div className="pt-4 border-t border-slate-200 space-y-3">
+                {totalSavings > 0 && (
+                  <div className="flex justify-between text-xs text-emerald-600 font-bold">
+                    <span>مجموع تخفیف پت‌شاپ:</span>
+                    <span>{formatPrice(totalSavings)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm font-black text-slate-900">
+                  <span>مبلغ قابل پرداخت:</span>
+                  <span className="text-orange-600">{formatPrice(totalPrice)}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    setOrderSuccess(true);
+                    setCart([]);
+                    setShowCart(false);
+                  }}
+                  className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/30 transition cursor-pointer"
+                >
+                  ثبت نهایی سفارش و ارسال فوری
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Order Toast */}
+      {orderSuccess && (
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
+          <Check className="w-5 h-5 bg-white/20 rounded-full p-1" />
+          <div>
+            <span className="font-bold text-sm block">سفارش پت‌شاپ با موفقیت ثبت شد!</span>
+            <span className="text-[11px] text-emerald-100">بسته‌بندی اختصاصی در حال آماده‌سازی برای ارسال فوری است.</span>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}`;
+      } else if (isFinanceOrBudget && !isCrypto) {
         componentName = "FinanceDashboard";
         componentCode = `import React, { useState } from 'react';
 import { Wallet, TrendingUp, TrendingDown, Plus, Trash2, Filter, ArrowUpRight, ArrowDownLeft, PieChart, Shield, Calendar, Tag, AlertCircle, CheckCircle2, ChevronDown, DollarSign } from 'lucide-react';
