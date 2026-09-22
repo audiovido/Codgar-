@@ -792,7 +792,7 @@ export default function DynamicGeneratedApp() {
 
       try {
         const keyManager = KeyManager.getInstance();
-        const candidateModels = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-1.5-flash'];
+        const candidateModels = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
 
         for (const candModel of candidateModels) {
           try {

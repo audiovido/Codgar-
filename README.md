@@ -1,37 +1,40 @@
-# 🚀 کدگر (CODGAR) - Autonomous AI Coding Studio & Multi-Router Engine
+# 🚀 کدگر (CODGAR AI) - Autonomous AI Coding Studio & Multi-Router Engine
 
 کدگر (Codgar) یک محیط توسعه مستقل و پیشرفته (Autonomous AI Coding Agent & Full-Stack Architect) است که فرانت‌اند مدرن (React 19 + Tailwind CSS) و بک‌اند ماژولار قدرتمند (Node.js + Express) را به همراه ران‌تایم هوشمند، کامپایلر چندزبانه، و استخر بی‌نهایت توکن (Infinite Token Pool) در یک پکیج آماده و کامل ارائه می‌دهد.
 
 ---
 
-## ⚡ راه‌اندازی سریع در هر سیستم با یک فرمان (Quick One-Command Setup)
+## ⚡ نصب و راه‌اندازی ۱۰۰٪ خودکار در سیستم خام (حتی بدون Node.js)
 
-برای اینکه پروژه روی هر کامپیوتر یا سرور دیگری (ویندوز، مک، لینوکس) با یک دستور از گیت‌هاب دانلود و اجرا شود:
+این پروژه مجهز به یک **اسکریپت خودکار تشخیص سیستم خام** (`install.sh` برای مک و لینوکس، و `install.bat` برای ویندوز) است که اگر حتی Node.js یا پیش‌نیازی نصب نباشد، خودکار آن را دانلود، نصب و به‌روزرسانی کرده و سرور را روی پورت 3000 اجرا می‌کند.
 
-### روش ۱: فرمان جادویی تک‌خطی (One-Liner)
+### ۱. دستور تک‌خطی برای مک و لینوکس (Terminal):
 
 ```bash
-git clone <آدرس_ریپازیتوری_گیتهاب> && cd codgar && npm run setup
+git clone https://github.com/audiovido/CODGAR----V2.git && cd CODGAR----V2 && ./install.sh
 ```
 
-یا اگر دستورات استاندارد را ترجیح می‌دهید:
+### ۲. یا با دستور استاندارد NPM (در صورت داشتن Node.js):
 
 ```bash
 # ۱. کلون کردن مخزن
-git clone <YOUR_GITHUB_REPO_URL>
-cd codgar
+git clone https://github.com/audiovido/CODGAR----V2.git
+cd CODGAR----V2
 
-# ۲. نصب وابستگی‌های فرانت‌اند و بک‌اند
-npm install
+# ۲. اجرای خودکار نصب پکیج‌ها و کانفیگ
+npm run setup
 
-# ۳. تنظیم کلیدها (تنظیم حداقل یک کلید اختیاری یا اجباری)
-cp .env.example .env
-
-# ۴. اجرای هم‌زمان سرور بک‌اند و رابط فرانت‌اند
+# ۳. شروع سرور توسعه
 npm run dev
 ```
 
-پروژه به صورت خودکار روی پورت **3000** بالا می‌آید:
+### ۳. در محیط ویندوز (Windows):
+کافیست پروژه را دانلود یا کلون کرده و روی فایل **`install.bat`** دوبار کلیک کنید!
+
+---
+
+## 🌐 آدرس دسترسی محلی
+پس از اجرای دستور، پروژه به صورت خودکار بالا آمده و در مرورگر با این آدرس قابل مشاهده است:
 👉 **http://localhost:3000**
 
 ---
@@ -44,21 +47,23 @@ npm run dev
 | `npm run build` | کامپایل فرانت‌اند به استاتیک در `dist/` و باندل سرور با `esbuild` به `dist/server.cjs` |
 | `npm start` | اجرای نسخه نهایی و پروداکشن (`node dist/server.cjs`) |
 | `npm run lint` | بررسی کامل ساختار تایپ‌اسکریپت و بدون خطا بودن کدها |
-| `npm run setup` | کپی خودکار `.env.example` به `.env` و نصب سریع وابستگی‌ها |
+| `npm run setup` | کپی خودکار `.env.example` به `.env` و نصب امن تمام وابستگی‌ها |
 
 ---
 
 ## 📦 پیش‌نیازهای سیستمی (Prerequisites)
 
-- **Node.js**: نسخه 20 به بالا (توصیه شده: Node.js 20.x یا 22.x LTS)
-- **NPM**: نسخه 10 به بالا (به همراه Node نصب می‌شود)
+- **Node.js**: نسخه 18 به بالا (توصیه شده: Node.js 20.x یا 22.x LTS)
+- **NPM**: نسخه 9 به بالا (همراه Node نصب است)
 - **Git**: جهت کلون کردن مخزن
+
+> 💡 *نکته:* در صورت استفاده از اسکریپت `./install.sh` یا `install.bat`، تمامی این پیش‌نیازها در صورت عدم وجود به طور خودکار نصب خواهند شد.
 
 ---
 
 ## 🔑 تنظیم کلیدهای API (اختیاری اما پیشنهادی)
 
-فایل `.env` را باز کنید:
+فایل `.env` را در صورت تمایل باز کنید:
 ```env
 GEMINI_API_KEY="کلید_جمنای_شما"
 ANTHROPIC_API_KEY="کلید_کلود_اختیاری"
@@ -72,4 +77,6 @@ ANTHROPIC_API_KEY="کلید_کلود_اختیاری"
 - `server.ts`: هسته اصلی سرور اکسپرس و ارکستراتور هوش مصنوعی و ترمینال.
 - `server/`: ماژول‌های زیرساختی شامل KeyManager, InfiniteTokenPool, AgentRuntime, UniversalCompiler.
 - `src/`: کامپوننت‌های فرانت‌اند (React 19, Motion, Lucide Icons, Tailwind CSS v4).
+- `install.sh` / `install.bat`: اسکریپت‌های نصب و اجرای تک‌کلیک روی سیستم‌های خام.
 - `BACKEND_ARCHITECTURE.md`: مستند کامل ریزبه‌ریز تمامی اندپوینت‌های API و کارکرد روترها.
+
