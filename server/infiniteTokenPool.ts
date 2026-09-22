@@ -943,19 +943,479 @@ export default function Website() {
         ? `سلام! آماده‌ام. چه برنامه‌ای یا کدی می‌خواهید بنویسیم؟\n\n**پرامپت پیشنهادی برای تست:**\n> «یک برنامه لیست کارها (Todo List) واکنش‌گرا با قابلیت دسته‌بندی و ذخیره در LocalStorage با Tailwind CSS بنویس.»`
         : `Hello! I'm ready. What app or code would you like to build?\n\n**Suggested test prompt:**\n> «Build a responsive Todo List app with category filtering and LocalStorage persistence using Tailwind CSS.»`;
     } else {
-      const isEcommerceOrDigikala = /دیجی‌کالا|دیجیکالا|digikala|digi\s*kala|فروشگاه|فروشگاهی|ecommerce|e-commerce|shop|store|مارکت|market|foroshgah|shabihe\s*digikala/i.test(prompt);
-      const isFruitOrSupermarket = /میوه|میوه‌فروشی|میوه فروشی|سوپرمارکت|سوپر مارکت|سبزی|سبزیجات|خواربار|ارگانیک|fruit|grocery|supermarket|vegetable/i.test(prompt);
-      const isRestaurantOrCafe = /رستوران|کافه|کافی‌شاپ|کافی شاپ|قهوه|فست‌فود|فست فود|پیتزا|برگر|غذا|نوشیدنی|restaurant|cafe|coffee|food|burger|pizza/i.test(prompt);
-      const isRealEstate = /املاک|مسکن|خانه|آپارتمان|ویلا|رهن|اجاره|ملک|real\s*estate|property|house/i.test(prompt);
-      const isPs5OrGaming = /ps5|playstation|پلی‌استیشن|پلی استیشن|کنسول|بازی|game|gaming|گیمینگ/i.test(prompt);
-      const isTodo = /todo|لیست|وظایف|کارها/i.test(prompt);
-      const isCrypto = /crypto|ارز|بیت‌کوین|bitcoin|price|ترید|trading|صرافی/i.test(prompt);
-      const isCalc = /calculator|ماشین حساب|حساب/i.test(prompt);
+      const normalizedPrompt = prompt
+        .replace(/[\u200c\u200b\u200d\uFEFF]/g, ' ')
+        .replace(/ي/g, 'ی')
+        .replace(/ك/g, 'ک')
+        .replace(/آ/g, 'ا')
+        .toLowerCase();
+
+      const isSnappOrDelivery = /اسنپ|snapp|snap|تپسی|tapsi|تاکسی[\s]*اینترنتی|پیک|سوپراپ|superapp/i.test(normalizedPrompt) || /اسنپ|snapp/i.test(prompt);
+      const isEcommerceOrDigikala = /دیجی[\s]*کالا|digikala|digi[\s_-]*kala|فروشگاه|فروشگاهی|ecommerce|e-commerce|shop|store|مارکت|market|foroshgah|دیجیکالا|خرید[\s]*انلاین/i.test(normalizedPrompt) || /دیجی[\s]*کالا|digikala/i.test(prompt);
+      const isFruitOrSupermarket = /میوه|میوه[\s]*فروشی|سوپرمارکت|سوپر[\s]*مارکت|سبزی|سبزیجات|خواربار|ارگانیک|fruit|grocery|supermarket|vegetable/i.test(normalizedPrompt);
+      const isRestaurantOrCafe = /رستوران|کافه|کافی[\s]*شاپ|قهوه|فست[\s]*فود|پیتزا|برگر|غذا|نوشیدنی|restaurant|cafe|coffee|food|burger|pizza/i.test(normalizedPrompt);
+      const isRealEstate = /املاک|مسکن|خانه|آپارتمان|ویلا|رهن|اجاره|ملک|دیوار|divar|real[\s]*estate|property|house/i.test(normalizedPrompt);
+      const isPs5OrGaming = /ps5|playstation|پلی[\s]*استیشن|کنسول|بازی|game|gaming|گیمینگ/i.test(normalizedPrompt);
+      const isTodo = /todo|لیست|وظایف|کارها/i.test(normalizedPrompt);
+      const isCrypto = /crypto|ارز|بیت[\s]*کوین|bitcoin|price|ترید|trading|صرافی|nobitex|نوبیتکس/i.test(normalizedPrompt);
+      const isCalc = /calculator|ماشین[\s]*حساب|حساب/i.test(normalizedPrompt);
 
       let componentCode = "";
       let componentName = "CustomApp";
 
-      if (isEcommerceOrDigikala && !isFruitOrSupermarket && !isPs5OrGaming) {
+      if (isSnappOrDelivery && !isFruitOrSupermarket && !isPs5OrGaming) {
+        componentName = "SnappSuperApp";
+        componentCode = `import React, { useState } from 'react';
+import { Car, Utensils, ShoppingBag, Bike, Stethoscope, Plane, MapPin, Search, Star, Clock, ShieldCheck, ChevronLeft, Plus, Minus, Check, ArrowRight, Sparkles, Navigation, Phone, CreditCard, Tag } from 'lucide-react';
+
+export default function SnappSuperApp() {
+  const [activeTab, setActiveTab] = useState('superapp'); // superapp, cab, food, market
+  const [cabOrigin, setCabOrigin] = useState('میدان ونک، ابتدای خیابان ملاصدرا');
+  const [cabDestination, setCabDestination] = useState('');
+  const [selectedCabType, setSelectedCabType] = useState('eco');
+  const [cabStatus, setCabStatus] = useState('idle'); // idle, searching, booked
+  const [foodCategory, setFoodCategory] = useState('all');
+  const [cart, setCart] = useState([]);
+  const [orderDone, setOrderDone] = useState(false);
+
+  const services = [
+    { id: 'cab', title: 'اسنپ راید', desc: 'درخواست تاکسی آنلاین', icon: Car, color: 'from-emerald-500 to-green-600', badge: 'پرتردد' },
+    { id: 'food', title: 'اسنپ‌فود', desc: 'سفارش آنلاین غذا و شیرینی', icon: Utensils, color: 'from-rose-500 to-pink-600', badge: 'تا ۵۰٪ تخفیف' },
+    { id: 'market', title: 'اسنپ‌مارکت', desc: 'خرید سوپرمارکتی زیر ۳۰ دقیقه', icon: ShoppingBag, color: 'from-blue-500 to-indigo-600', badge: 'ارسال فوری' },
+    { id: 'box', title: 'اسنپ‌باکس', desc: 'پیک موتوری و ارسال بسته', icon: Bike, color: 'from-amber-500 to-orange-600', badge: 'تحویل در محل' },
+    { id: 'doctor', title: 'اسنپ‌دکتر', desc: 'مشاوره آنلاین پزشکی و دارو', icon: Stethoscope, color: 'from-teal-500 to-cyan-600', badge: '۲۴ ساعته' },
+    { id: 'trip', title: 'اسنپ‌تریپ', desc: 'بلیط پرواز، قطار و هتل', icon: Plane, color: 'from-purple-500 to-violet-600', badge: 'تضمین قیمت' },
+  ];
+
+  const restaurants = [
+    {
+      id: 1,
+      name: 'رستوران سنتی و شاندیز نایب',
+      category: 'persian',
+      rating: 4.9,
+      deliveryTime: '25-35 دقیقه',
+      fee: 'رایگان',
+      image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=80',
+      tag: 'کوبیده مخصوص زعفرانی',
+      price: 340000,
+      badge: 'برگزیده اسنپ‌فود'
+    },
+    {
+      id: 2,
+      name: 'پیتزا و فست‌فود ایتالیایی سنسو',
+      category: 'fastfood',
+      rating: 4.8,
+      deliveryTime: '30-40 دقیقه',
+      fee: '۱۵,۰۰۰ تومان',
+      image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=600&auto=format&fit=crop&q=80',
+      tag: 'پیتزا پپرونی و سالاد سزار',
+      price: 295000,
+      badge: 'تخفیف ۲۰٪'
+    },
+    {
+      id: 3,
+      name: 'برگر زغالی و سوخاری باربیکیو',
+      category: 'burger',
+      rating: 4.7,
+      deliveryTime: '20-30 دقیقه',
+      fee: 'رایگان',
+      image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=80',
+      tag: 'دوبل چیزبرگر دست‌ساز',
+      price: 260000,
+      badge: 'ارسال اکسپرس'
+    }
+  ];
+
+  const addToFoodCart = (item) => {
+    setCart(prev => {
+      const existing = prev.find(i => i.id === item.id);
+      if (existing) {
+        return prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i);
+      }
+      return [...prev, { ...item, qty: 1 }];
+    });
+  };
+
+  const totalFoodPrice = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+  const formatToman = (num) => new Intl.NumberFormat('fa-IR').format(num) + ' تومان';
+
+  return (
+    <div className="min-h-screen bg-slate-100 text-slate-800 font-sans antialiased selection:bg-emerald-500 selection:text-white pb-24" dir="rtl">
+      
+      {/* Top Header Bar */}
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-18 flex items-center justify-between">
+          
+          {/* Logo */}
+          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveTab('superapp')}>
+            <div className="w-10 h-10 rounded-2xl bg-[#00D170] flex items-center justify-center text-white font-black text-2xl shadow-md shadow-emerald-500/20">
+              !
+            </div>
+            <div>
+              <span className="text-xl font-black text-[#00D170] tracking-tight block">اسنپ!</span>
+              <span className="text-[10px] text-slate-400 font-medium">سوپراپلیکیشن سبک زندگی</span>
+            </div>
+          </div>
+
+          {/* Location / Navigation Tab */}
+          <div className="flex items-center gap-2 bg-slate-100 px-3.5 py-2 rounded-2xl border border-slate-200 text-xs font-bold text-slate-700">
+            <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="hidden sm:inline">موقعیت فعلی:</span>
+            <span className="text-emerald-700 font-extrabold">تهران، میدان ونک</span>
+          </div>
+
+          {/* Wallet / Quick Link */}
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
+              <CreditCard className="w-3.5 h-3.5 text-emerald-600" />
+              <span>موجودی: ۲۵۰,۰۰۰ ت</span>
+            </div>
+            <button
+              onClick={() => setActiveTab('superapp')}
+              className={\`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer \${
+                activeTab === 'superapp' ? 'bg-[#00D170] text-white shadow-md shadow-emerald-500/20' : 'bg-slate-100 text-slate-600'
+              }\`}
+            >
+              صفحه اصلی
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content Sections */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+
+        {/* 1. Super App Overview Grid */}
+        {activeTab === 'superapp' && (
+          <div className="space-y-8">
+            
+            {/* Hero Greeting Banner */}
+            <div className="rounded-3xl bg-gradient-to-r from-emerald-600 via-green-600 to-teal-700 p-6 sm:p-8 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+              <div className="space-y-2 z-10 text-center md:text-right">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 text-xs font-bold backdrop-blur-md">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                  <span>سوپر اپلیکیشن اسنپ</span>
+                </span>
+                <h2 className="text-2xl sm:text-3xl font-black">همه خدمات روزمره، در یک اپلیکیشن</h2>
+                <p className="text-xs sm:text-sm text-emerald-100 max-w-xl">
+                  از سفر سریع درون‌شهری تا سفارش آنلاین غذا و سوپرمارکت با بیشترین سرعت و کیفیت.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 z-10">
+                <button
+                  onClick={() => setActiveTab('cab')}
+                  className="px-5 py-3 rounded-2xl bg-white text-emerald-800 font-extrabold text-xs shadow-lg hover:bg-emerald-50 transition cursor-pointer flex items-center gap-2"
+                >
+                  <Car className="w-4 h-4 text-emerald-600" />
+                  <span>درخواست تاکسی</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('food')}
+                  className="px-5 py-3 rounded-2xl bg-emerald-950/40 border border-white/30 text-white font-extrabold text-xs shadow-lg hover:bg-emerald-950/60 transition cursor-pointer flex items-center gap-2"
+                >
+                  <Utensils className="w-4 h-4 text-rose-300" />
+                  <span>اسنپ‌فود</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Services Grid */}
+            <div>
+              <h3 className="font-extrabold text-lg text-slate-800 mb-4 flex items-center gap-2">
+                <span>سرویس‌های محبوب اسنپ</span>
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                {services.map(srv => {
+                  const Icon = srv.icon;
+                  return (
+                    <div
+                      key={srv.id}
+                      onClick={() => {
+                        if (srv.id === 'cab' || srv.id === 'food') setActiveTab(srv.id);
+                        else setActiveTab('food');
+                      }}
+                      className="bg-white rounded-3xl border border-slate-200/80 hover:border-emerald-400 p-5 flex flex-col items-center text-center justify-between shadow-xs hover:shadow-lg transition-all duration-300 group cursor-pointer"
+                    >
+                      <div className={\`w-14 h-14 rounded-2xl bg-gradient-to-tr \${srv.color} text-white flex items-center justify-center shadow-md mb-3 group-hover:scale-110 transition-transform\`}>
+                        <Icon className="w-7 h-7" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 mb-1.5 inline-block">
+                          {srv.badge}
+                        </span>
+                        <h4 className="font-extrabold text-sm text-slate-900 mb-1">{srv.title}</h4>
+                        <p className="text-[10px] text-slate-400 leading-tight">{srv.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Quick Food Carousel */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-extrabold text-lg text-slate-800 flex items-center gap-2">
+                  <Utensils className="w-5 h-5 text-rose-500" />
+                  <span>پیشنهادهای داغ اسنپ‌فود در اطراف شما</span>
+                </h3>
+                <button
+                  onClick={() => setActiveTab('food')}
+                  className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 cursor-pointer"
+                >
+                  <span>مشاهده همه رستوران‌ها</span>
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {restaurants.map(rest => (
+                  <div key={rest.id} className="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300">
+                    <div className="relative h-44">
+                      <img src={rest.image} alt={rest.name} className="w-full h-full object-cover" />
+                      <span className="absolute top-3 right-3 bg-emerald-600 text-white font-black text-xs px-2.5 py-1 rounded-xl shadow-md">
+                        {rest.badge}
+                      </span>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-1">
+                        <h4 className="font-extrabold text-sm text-slate-900">{rest.name}</h4>
+                        <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
+                          <Star className="w-3.5 h-3.5 fill-current" />
+                          <span>{rest.rating}</span>
+                        </div>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-3">{rest.tag}</p>
+                      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                        <div className="text-xs font-extrabold text-emerald-700">{formatToman(rest.price)}</div>
+                        <button
+                          onClick={() => addToFoodCart(rest)}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer"
+                        >
+                          سفارش غذا
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* 2. Cab / Ride Booking Tab */}
+        {activeTab === 'cab' && (
+          <div className="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-xl p-6 sm:p-8">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#00D170] text-white flex items-center justify-center shadow-md">
+                  <Car className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-slate-900">درخواست تاکسی اسنپ</h3>
+                  <span className="text-[11px] text-slate-400">سفر امن، ارزان و سریع در سراسر شهر</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveTab('superapp')}
+                className="text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+              >
+                بازگشت
+              </button>
+            </div>
+
+            {/* Origin & Destination Inputs */}
+            <div className="space-y-3 mb-6">
+              <div className="relative">
+                <label className="text-[11px] font-bold text-slate-500 block mb-1">مبدا شما:</label>
+                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-3 text-xs text-slate-800">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500 shrink-0" />
+                  <input
+                    type="text"
+                    value={cabOrigin}
+                    onChange={(e) => setCabOrigin(e.target.value)}
+                    className="flex-1 bg-transparent outline-none font-bold text-xs text-slate-800"
+                  />
+                </div>
+              </div>
+
+              <div className="relative">
+                <label className="text-[11px] font-bold text-slate-500 block mb-1">مقصد شما:</label>
+                <div className="flex items-center gap-2 bg-slate-50 border border-emerald-300 rounded-2xl p-3 text-xs text-slate-800 focus-within:ring-2 focus-within:ring-emerald-500">
+                  <div className="w-3 h-3 rounded-full bg-rose-500 shrink-0" />
+                  <input
+                    type="text"
+                    value={cabDestination}
+                    onChange={(e) => setCabDestination(e.target.value)}
+                    placeholder="آدرس یا نام مقصد را وارد نمایید (مثلا: میدان تجریش)"
+                    className="flex-1 bg-transparent outline-none font-bold text-xs text-slate-800 placeholder-slate-400"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Cab Service Types */}
+            <div className="space-y-2.5 mb-6">
+              <label className="text-[11px] font-bold text-slate-500 block">انتخاب نوع سرویس:</label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { id: 'eco', title: 'اسنپ اکو', price: 42000, desc: 'سریع و به‌صرفه' },
+                  { id: 'plus', title: 'اسنپ پلاس', price: 58000, desc: 'خودروهای منتخب' },
+                  { id: 'bike', title: 'اسنپ بایک', price: 29000, desc: 'عبور از ترافیک' },
+                ].map(type => (
+                  <button
+                    key={type.id}
+                    onClick={() => setSelectedCabType(type.id)}
+                    className={\`p-3 rounded-2xl border text-center transition cursor-pointer \${
+                      selectedCabType === type.id
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-900 shadow-sm'
+                        : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                    }\`}
+                  >
+                    <span className="font-extrabold text-xs block mb-1">{type.title}</span>
+                    <span className="text-[11px] font-black text-emerald-700 block mb-0.5">{formatToman(type.price)}</span>
+                    <span className="text-[9px] text-slate-400 block">{type.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Request Action Button */}
+            {cabStatus === 'searching' ? (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-300 text-center animate-pulse">
+                <div className="w-8 h-8 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin mx-auto mb-2" />
+                <span className="font-extrabold text-xs text-emerald-900 block">در حال جستجوی نزدیک‌ترین راننده اسنپ...</span>
+                <span className="text-[10px] text-emerald-700">لطفاً چند لحظه شکیبا باشید.</span>
+              </div>
+            ) : cabStatus === 'booked' ? (
+              <div className="p-4 rounded-2xl bg-emerald-600 text-white text-center shadow-lg">
+                <Check className="w-6 h-6 mx-auto mb-1 bg-white/20 rounded-full p-1" />
+                <span className="font-black text-sm block">راننده اسنپ در راه است!</span>
+                <span className="text-xs text-emerald-100 block mt-1">پژو ۲۰۶ سفید - زمان رسیدن: ۳ دقیقه</span>
+                <button
+                  onClick={() => setCabStatus('idle')}
+                  className="mt-3 px-4 py-1.5 rounded-xl bg-white text-emerald-800 font-bold text-xs cursor-pointer"
+                >
+                  لغو سفر
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  if (!cabDestination) setCabDestination('میدان آزادی، ابتدای جناح');
+                  setCabStatus('searching');
+                  setTimeout(() => setCabStatus('booked'), 2200);
+                }}
+                className="w-full py-4 rounded-2xl bg-[#00D170] hover:bg-emerald-600 text-white font-black text-sm shadow-lg shadow-emerald-500/25 transition cursor-pointer"
+              >
+                درخواست آنلاین اسنپ
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 3. Food Delivery Tab */}
+        {activeTab === 'food' && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md">
+                  <Utensils className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-slate-900">اسنپ‌فود - سفارش آنلاین غذا</h3>
+                  <span className="text-[11px] text-slate-400">سفارش از بهترین رستوران‌ها، فست‌فودها و کافی‌شاپ‌ها</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setActiveTab('superapp')}
+                className="text-xs font-bold text-slate-500 hover:text-slate-800 cursor-pointer"
+              >
+                بازگشت به سوپراپ
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {restaurants.map(rest => (
+                <div key={rest.id} className="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 p-4 flex flex-col justify-between">
+                  <div>
+                    <div className="relative h-48 rounded-2xl overflow-hidden mb-3">
+                      <img src={rest.image} alt={rest.name} className="w-full h-full object-cover" />
+                      <span className="absolute top-3 right-3 bg-rose-600 text-white font-black text-xs px-2.5 py-1 rounded-xl shadow-md">
+                        {rest.badge}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="font-black text-sm text-slate-900">{rest.name}</h4>
+                      <div className="flex items-center gap-1 text-amber-500 text-xs font-bold">
+                        <Star className="w-3.5 h-3.5 fill-current" />
+                        <span>{rest.rating}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-2">{rest.tag}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-400 mb-4">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{rest.deliveryTime}</span>
+                      <span>•</span>
+                      <span>پیک: {rest.fee}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <span className="font-black text-sm text-rose-600">{formatToman(rest.price)}</span>
+                    <button
+                      onClick={() => addToFoodCart(rest)}
+                      className="flex items-center gap-1 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md shadow-rose-600/20 cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>افزودن به سبد</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Food Cart Drawer */}
+            {cart.length > 0 && (
+              <div className="fixed bottom-6 left-6 right-6 max-w-xl mx-auto z-50 bg-slate-900 text-white p-4 rounded-3xl shadow-2xl flex items-center justify-between gap-4 border border-slate-800 animate-in slide-in-from-bottom-6">
+                <div>
+                  <span className="text-xs text-slate-300 block">مجموع سفارش غذا ({cart.reduce((s, i) => s + i.qty, 0)} قلم):</span>
+                  <span className="text-sm font-black text-emerald-400">{formatToman(totalFoodPrice)}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    setOrderDone(true);
+                    setCart([]);
+                    setTimeout(() => setOrderDone(false), 4000);
+                  }}
+                  className="px-6 py-2.5 rounded-2xl bg-[#00D170] hover:bg-emerald-600 text-white font-extrabold text-xs shadow-lg shadow-emerald-500/30 transition cursor-pointer"
+                >
+                  ثبت سفارش و پرداخت
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+      </main>
+
+      {/* Success Notification */}
+      {orderDone && (
+        <div className="fixed bottom-6 left-6 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4">
+          <Check className="w-5 h-5 bg-white/20 rounded-full p-1" />
+          <div>
+            <span className="font-bold text-sm block">سفارش اسنپ‌فود شما ثبت شد!</span>
+            <span className="text-[11px] text-emerald-100">رستوران در حال آماده‌سازی و ارسال پیک است.</span>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}`;
+      } else if (isEcommerceOrDigikala && !isFruitOrSupermarket && !isPs5OrGaming) {
         componentName = "DigikalaStore";
         componentCode = `import React, { useState, useEffect } from 'react';
 import { ShoppingCart, Search, Star, ShieldCheck, Truck, Sparkles, Heart, Check, Plus, Minus, Trash2, Tag, Percent, ArrowLeft, X, Flame, Smartphone, Laptop, Headphones, Watch, Tv } from 'lucide-react';
