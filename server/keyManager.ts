@@ -322,11 +322,14 @@ export class KeyManager {
    */
   public async executeWithRotation<T>(
     operation: (ai: GoogleGenAI, keyInfo: { key: string; mask: string; index: number }) => Promise<T>,
-    maxRetries: number = 3
+    maxRetries: number = 2
   ): Promise<T> {
+    const totalKeys = this.keys.length;
+    // If only 1 key is available, don't repeatedly retry on hard rate limit / quota errors
+    const effectiveRetries = totalKeys > 1 ? Math.min(maxRetries, totalKeys - 1) : 0;
     let attempt = 0;
 
-    while (attempt <= maxRetries) {
+    while (attempt <= effectiveRetries) {
       attempt++;
       const activeObj = this.keys[this.currentIndex];
       const ai = this.getClient();
@@ -340,26 +343,24 @@ export class KeyManager {
       } catch (err: any) {
         const isLimited = this.isRateLimitOrExhausted(err);
         const isInvalidKey = String(err?.message || err || '').toLowerCase().includes('api key not valid') || String(err?.message || err || '').toLowerCase().includes('api_key_invalid');
+        const errSummary = (err?.message || String(err)).slice(0, 80);
 
-        if (isLimited && attempt <= maxRetries) {
-          console.warn(
-            `[KeyManager] Issue hit on key #${this.currentIndex + 1} (${activeObj.mask}). Error: ${err.message}. Retrying (attempt ${attempt}/${maxRetries})...`
+        if (isLimited && attempt <= effectiveRetries && totalKeys > 1) {
+          console.log(
+            `[KeyManager] Key #${this.currentIndex + 1} (${activeObj.mask}) rate-limited or busy. Rotating key (attempt ${attempt}/${effectiveRetries})...`
           );
-          if (this.keys.length > 1) {
-            const cooldown = isInvalidKey ? 24 * 60 * 60 * 1000 : 60_000;
-            this.rotateKey(err.message || 'Rate limit/Invalid Key', cooldown);
-          }
-          // Exponential backoff pause
-          await new Promise((r) => setTimeout(r, attempt * 1000));
+          const cooldown = isInvalidKey ? 24 * 60 * 60 * 1000 : 60_000;
+          this.rotateKey(err.message || 'Rate limit/Invalid Key', cooldown);
+          await new Promise((r) => setTimeout(r, 400));
           continue;
         }
 
-        // If not rate limited, or exceeded retries, re-throw
+        // Re-throw so higher level cascades or fallbacks take over immediately
         throw err;
       }
     }
 
-    throw new Error('All API key retries failed due to continuous rate limits.');
+    throw new Error('All available API keys are currently rate-limited.');
   }
 
   public getStatus(): KeyStatus {

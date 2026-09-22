@@ -14,6 +14,20 @@ import {
   Terminal,
   Clock,
   Calendar,
+  Code2,
+  Cpu,
+  Zap,
+  MessageSquare,
+  Sparkle,
+  FolderOpen,
+  FolderPlus,
+  FolderCheck,
+  CheckCircle2,
+  HardDrive,
+  Play,
+  Layers,
+  ArrowRight,
+  RefreshCw,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { TranslationDict, Language, translations } from '../utils/translations';
@@ -84,6 +98,7 @@ interface Props {
   messages: Message[];
   onSendMessage: (text: string, mode: AgentMode) => void;
   isExecuting: boolean;
+  taskIntent?: 'chat' | 'coding';
   onOpenCodeDrawer?: () => void;
   onOpenSettings?: () => void;
   onOpenSiriVoice?: () => void;
@@ -102,6 +117,7 @@ export function CodedAiChatCard({
   messages,
   onSendMessage,
   isExecuting,
+  taskIntent = 'chat',
   onOpenSiriVoice,
   isRecordingVoice = false,
   inputText: controlledInputText,
@@ -115,6 +131,7 @@ export function CodedAiChatCard({
 }: Props) {
   const t = propT || translations[language] || translations.en;
   const isRTL = language === 'fa';
+  const [activeMode, setActiveMode] = useState<'chat' | 'coding'>('chat');
   const [internalInputText, setInternalInputText] = useState('');
   const inputText = controlledInputText !== undefined ? controlledInputText : internalInputText;
   const setInputText = onInputTextChange || setInternalInputText;
@@ -122,7 +139,141 @@ export function CodedAiChatCard({
   const [attachedFileName, setAttachedFileName] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-resize textarea when text changes
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = `${Math.min(Math.max(scrollHeight, 38), 160)}px`;
+    }
+  }, [inputText]);
+
+  // Autonomous Desktop & Screenshot Organizer State
+  const [isOrganizingDesktop, setIsOrganizingDesktop] = useState<boolean>(false);
+  const [desktopOrganizeResult, setDesktopOrganizeResult] = useState<{
+    success: boolean;
+    folder: string;
+    count: number;
+    files: string[];
+    source: 'browser_fs' | 'local_bridge';
+    message: string;
+  } | null>(null);
+
+  const handleAutonomousDesktopOrganize = async () => {
+    setIsOrganizingDesktop(true);
+    setDesktopOrganizeResult(null);
+
+    const folderName = isRTL ? 'کدگر اسکرین شات' : 'Codgar Screenshots';
+
+    // 1. Try Native Browser File System Access API (showDirectoryPicker)
+    if (typeof (window as any).showDirectoryPicker === 'function') {
+      try {
+        const dirHandle = await (window as any).showDirectoryPicker({
+          mode: 'readwrite',
+          startIn: 'desktop',
+        });
+
+        // Create or get subfolder
+        const destFolderHandle = await dirHandle.getDirectoryHandle(folderName, { create: true });
+        const screenshotRegex = /(screenshot|screen shot|screen_shot|اسکرین|اسکرین‌شات|اسکرین شات|capture|snip|\.png$|\.jpg$|\.jpeg$)/i;
+
+        const movedFiles: string[] = [];
+
+        // Iterate directory entries
+        for await (const entry of dirHandle.values()) {
+          if (entry.kind === 'file' && screenshotRegex.test(entry.name)) {
+            try {
+              const fileHandle = entry;
+              const file = await fileHandle.getFile();
+              
+              // Write into subfolder
+              const newFileHandle = await destFolderHandle.getFileHandle(entry.name, { create: true });
+              const writable = await newFileHandle.createWritable();
+              await writable.write(await file.arrayBuffer());
+              await writable.close();
+
+              // Delete original if browser supports removal
+              if (typeof dirHandle.removeEntry === 'function') {
+                try {
+                  await dirHandle.removeEntry(entry.name);
+                } catch {
+                  // If browser restricts removal, file was copied safely
+                }
+              }
+
+              movedFiles.push(entry.name);
+            } catch (fileErr) {
+              console.warn('Error organizing file:', fileErr);
+            }
+          }
+        }
+
+        const successResult = {
+          success: true,
+          folder: folderName,
+          count: movedFiles.length,
+          files: movedFiles,
+          source: 'browser_fs' as const,
+          message: isRTL
+            ? `با موفقیت ${movedFiles.length} فایل اسکرین‌شات به پوشه "${folderName}" منتقل شدند.`
+            : `Successfully organized ${movedFiles.length} screenshot files into "${folderName}".`,
+        };
+
+        setDesktopOrganizeResult(successResult);
+        setIsOrganizingDesktop(false);
+        return;
+      } catch (pickerErr: any) {
+        if (pickerErr.name === 'AbortError') {
+          setIsOrganizingDesktop(false);
+          return;
+        }
+        console.log('Falling back to Local Bridge filesystem endpoint...', pickerErr);
+      }
+    }
+
+    // 2. Fallback to Local Bridge MCP Server Execution
+    try {
+      const res = await fetch('/api/local-bridge/organize-desktop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destinationFolderName: folderName }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDesktopOrganizeResult({
+          success: true,
+          folder: data.destinationFolder,
+          count: data.filesMovedCount,
+          files: data.movedFiles || [],
+          source: 'local_bridge',
+          message: data.message,
+        });
+      } else {
+        setDesktopOrganizeResult({
+          success: false,
+          folder: folderName,
+          count: 0,
+          files: [],
+          source: 'local_bridge',
+          message: data.error || 'خطا در اجرای خودکار',
+        });
+      }
+    } catch (err: any) {
+      setDesktopOrganizeResult({
+        success: false,
+        folder: folderName,
+        count: 0,
+        files: [],
+        source: 'local_bridge',
+        message: err.message,
+      });
+    } finally {
+      setIsOrganizingDesktop(false);
+    }
+  };
 
   // Auto-scroll to bottom on new messages or streaming typing
   useEffect(() => {
@@ -132,9 +283,16 @@ export function CodedAiChatCard({
   const handleSend = () => {
     const prompt = inputText.trim();
     if (!prompt || isExecuting) return;
-    onSendMessage(prompt, 'agent');
+    
+    // Explicit user-selected mode: 'chat' for fast natural conversation, 'agent' for coding
+    const targetMode: AgentMode = activeMode === 'coding' ? 'agent' : 'chat';
+
+    onSendMessage(prompt, targetMode);
     setInputText('');
     setAttachedFileName(null);
+    if (textareaRef.current) {
+      textareaRef.current.style.height = '38px';
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -186,9 +344,9 @@ export function CodedAiChatCard({
       }}
       className="w-full max-w-[96%] xl:max-w-[1380px] rounded-[32px] ice-glass-window select-none relative z-30 mx-auto border border-white/85 backdrop-blur-3xl flex flex-col justify-between transform-gpu transition-all duration-300 shadow-[0_25px_80px_rgba(37,99,235,0.18)] h-[85vh] max-h-[880px] min-h-[500px] p-4 sm:p-7"
     >
-      {/* 1. Sleek Window Header: Clean Claude/Cursor-Style Agent Bar */}
+      {/* 1. Sleek Window Header: Mode Toggles & Agent Bar */}
       <div
-        className="flex items-center justify-between pb-2.5 border-b border-blue-200/60 shrink-0"
+        className="flex items-center justify-between pb-2.5 border-b border-blue-200/60 shrink-0 gap-2 flex-wrap sm:flex-nowrap"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
         {/* Left: Window Traffic Lights & Agent Branding */}
@@ -200,21 +358,6 @@ export function CodedAiChatCard({
             <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8] shadow-[0_0_6px_rgba(56,189,248,0.5)]" />
           </div>
 
-          <div
-            className={`w-7 h-7 rounded-xl p-[1px] flex-shrink-0 transition-all duration-500 ${
-              isExecuting
-                ? 'bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-500 animate-codgar-thinking shadow-md'
-                : 'bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-500 shadow-[0_0_12px_rgba(56,189,248,0.35)]'
-            }`}
-          >
-            <div className="w-full h-full bg-white rounded-[11px] flex items-center justify-center text-blue-600">
-              <Bot
-                className={`w-4 h-4 text-blue-600 ${
-                  isExecuting ? 'animate-pulse' : ''
-                }`}
-              />
-            </div>
-          </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="font-sans font-black text-xs sm:text-sm tracking-wide flex items-center">
@@ -242,17 +385,43 @@ export function CodedAiChatCard({
           </div>
         </div>
 
-        {/* Right: Clean Header Controls & Live Date Badge */}
-        <div className="flex items-center gap-2">
-          <div className="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50/80 border border-blue-200/70 text-blue-900 text-[10px] font-medium shadow-2xs">
-            <Calendar className="w-3 h-3 text-blue-600 shrink-0" />
-            <span>
-              {new Intl.DateTimeFormat(isRTL ? 'fa-IR-u-ca-persian' : 'en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric',
-              }).format(new Date())}
-            </span>
+        {/* Center/Right: Dedicated Mode Selector (Fast Chat vs Deep Coding) & Online Indicator */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          {/* Distinct 2-Mode Segmented Pill */}
+          <div className="flex items-center p-1 rounded-2xl bg-white/70 border border-white/90 shadow-[0_2px_10px_rgba(37,99,235,0.06)] gap-1">
+            <button
+              type="button"
+              onClick={() => setActiveMode('chat')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all duration-200 cursor-pointer active:scale-95 ${
+                activeMode === 'chat'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black shadow-[0_2px_10px_rgba(16,185,129,0.35)] scale-100'
+                  : 'text-slate-600 hover:text-emerald-700 hover:bg-emerald-50/60 font-bold'
+              }`}
+              title={isRTL ? 'حالت گفتگو و چت سریع، بدون کدنویسی خودکار' : 'Fast conversational mode'}
+            >
+              <Zap className={`w-3.5 h-3.5 ${activeMode === 'chat' ? 'text-white' : 'text-emerald-600'}`} />
+              <span>{isRTL ? 'چت ساده' : 'Fast Chat'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveMode('coding')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all duration-200 cursor-pointer active:scale-95 ${
+                activeMode === 'coding'
+                  ? 'bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-600 text-white font-black shadow-[0_2px_10px_rgba(37,99,235,0.35)] scale-100'
+                  : 'text-slate-600 hover:text-blue-700 hover:bg-blue-50/60 font-bold'
+              }`}
+              title={isRTL ? 'حالت کدنویسی، ساخت برنامه و اجرای پروژه‌ها' : 'Deep autonomous coding mode'}
+            >
+              <Code2 className={`w-3.5 h-3.5 ${activeMode === 'coding' ? 'text-white' : 'text-blue-600'}`} />
+              <span>{isRTL ? 'کدنویسی' : 'Coding'}</span>
+            </button>
+          </div>
+
+          {/* Subtle Live Active Indicator */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50/80 border border-emerald-200/80 text-[10px] font-bold text-emerald-800 shadow-2xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>{isRTL ? 'آنلاین و آماده' : 'Online & Ready'}</span>
           </div>
         </div>
       </div>
@@ -288,11 +457,11 @@ export function CodedAiChatCard({
                 </div>
               )}
 
-              {/* Agent Avatar (Bot Icon) */}
+              {/* Agent Avatar (Original Codgar Bot Icon) */}
               {!isUser && (
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 p-[1px] shadow-sm shrink-0 mt-0.5">
-                  <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center text-blue-600">
-                    <Bot className="w-3.5 h-3.5" />
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-500 p-[1.5px] shadow-[0_2px_8px_rgba(37,99,235,0.2)] shrink-0 mt-0.5">
+                  <div className="w-full h-full bg-white rounded-[9px] flex items-center justify-center text-blue-600 shadow-inner">
+                    <Bot className="w-3.5 h-3.5 text-blue-600 drop-shadow-[0_1px_2px_rgba(37,99,235,0.25)]" />
                   </div>
                 </div>
               )}
@@ -387,18 +556,19 @@ export function CodedAiChatCard({
                   } text-[11px] select-none`}
                 >
                   {/* Left: Clean Harmonious Date & Time Display */}
-                  <div className="flex items-center gap-1.5 font-mono text-[10px] text-slate-500 font-semibold opacity-90">
-                    <Clock className="w-3 h-3 text-blue-600" />
-                    <span>
-                      {new Date(msg.timestamp || Date.now()).toLocaleDateString(isRTL ? 'fa-IR' : 'en-US', {
-                        month: 'short',
+                  <div className="flex items-center gap-1.5 text-[11px] font-sans font-medium text-slate-500">
+                    <Clock className="w-3.5 h-3.5 text-blue-600/90 shrink-0" />
+                    <span className="tracking-normal">
+                      {new Intl.DateTimeFormat(isRTL ? 'fa-IR-u-ca-persian' : 'en-US', {
                         day: 'numeric',
-                      })}
-                      {' - '}
-                      {new Date(msg.timestamp || Date.now()).toLocaleTimeString([], {
+                        month: 'long',
+                      }).format(new Date(msg.timestamp || Date.now()))}
+                      {' • '}
+                      {new Intl.DateTimeFormat(isRTL ? 'fa-IR' : 'en-US', {
                         hour: '2-digit',
                         minute: '2-digit',
-                      })}
+                        hour12: false,
+                      }).format(new Date(msg.timestamp || Date.now()))}
                     </span>
                   </div>
 
@@ -426,6 +596,92 @@ export function CodedAiChatCard({
                     )}
                   </button>
                 </div>
+
+                {/* Interactive Desktop & Screenshot Organizer Widget */}
+                {!isUser && (textContent.includes('اسکرین') || textContent.includes('دسکتاپ') || textContent.includes('screenshot') || textContent.includes('پوشه') || textContent.includes('فولدر')) && (
+                  <div className="mt-3 pt-3 border-t border-blue-200/70">
+                    <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-sky-50/80 to-indigo-50/90 border border-blue-200/80 shadow-sm text-slate-800 dir-auto">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                            <FolderPlus className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-black text-slate-900 block">
+                              {isRTL ? 'مرتب‌سازی و انتقال اسکرین‌شات‌ها' : 'Auto-Organize Screenshots'}
+                            </span>
+                            <span className="text-[10px] text-blue-700 font-medium">
+                              {isRTL ? 'ساخت پوشه اختصاصی و انتقال فایل‌های اسکرین‌شات دسکتاپ' : 'Create a dedicated folder and move desktop screenshots'}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
+                          {isRTL ? 'آماده' : 'Ready'}
+                        </span>
+                      </div>
+
+                      {/* Execution Result Status */}
+                      {desktopOrganizeResult ? (
+                        <div className="mt-2.5 p-3 rounded-xl bg-white/90 border border-emerald-300 shadow-2xs">
+                          <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold mb-1">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <span>{desktopOrganizeResult.message}</span>
+                          </div>
+
+                          <div className="flex items-center gap-3 text-[11px] text-slate-600 font-mono mt-2 pt-2 border-t border-slate-100">
+                            <span className="flex items-center gap-1 font-sans">
+                              <FolderCheck className="w-3.5 h-3.5 text-blue-600" />
+                              <strong className="text-slate-800">{desktopOrganizeResult.folder}</strong>
+                            </span>
+                            <span>•</span>
+                            <span className="font-sans">
+                              {isRTL ? `تعداد فایل‌ها: ${desktopOrganizeResult.count}` : `Files: ${desktopOrganizeResult.count}`}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleAutonomousDesktopOrganize}
+                            disabled={isOrganizingDesktop}
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black shadow-[0_4px_12px_rgba(37,99,235,0.25)] active:scale-95 transition cursor-pointer disabled:opacity-60"
+                          >
+                            {isOrganizingDesktop ? (
+                              <>
+                                <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                                <span>{isRTL ? 'در حال انتقال فایل‌ها...' : 'Organizing files...'}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Play className="w-4 h-4 fill-current" />
+                                <span>{isRTL ? '📁 انتقال اسکرین‌شات‌ها به پوشه جدید' : '📁 Move Screenshots to Folder'}</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Quick Action Button: Transition from Chat to Coding Mode when permission requested */}
+                {!isUser && (textContent.includes('کدنویسی') || textContent.toLowerCase().includes('coding mode')) && activeMode === 'chat' && (
+                  <div className="mt-2.5 pt-2 border-t border-blue-200/60 flex items-center justify-start">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveMode('coding');
+                        onSendMessage(isRTL ? 'بله، به حالت کدنویسی برو و این پروژه را به صورت کامل و زنده بساز و پیش‌نمایش را باز کن.' : 'Yes, switch to coding mode and build this project completely with live preview.', 'agent');
+                      }}
+                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md transition-all active:scale-95 cursor-pointer animate-pulse"
+                    >
+                      <Code2 className="w-4 h-4" />
+                      <span>{isRTL ? '🚀 تایید و شروع کدنویسی زنده پروژه' : '🚀 Switch to Coding Mode & Build'}</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* In English LTR: User Avatar on Right */}
@@ -448,9 +704,9 @@ export function CodedAiChatCard({
           >
             {isRTL ? (
               <>
-                <div className="order-2 w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 p-[1px] shadow-sm shrink-0 mt-0.5">
-                  <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center text-blue-600">
-                    <Bot className="w-3.5 h-3.5 animate-spin-slow" />
+                <div className="order-2 w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-500 p-[1.5px] shadow-[0_2px_8px_rgba(37,99,235,0.2)] shrink-0 mt-0.5">
+                  <div className="w-full h-full bg-white rounded-[9px] flex items-center justify-center text-blue-600 shadow-inner">
+                    <Bot className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
                   </div>
                 </div>
                 <div className="order-1 ice-glass-card text-slate-800 rounded-2xl p-3 text-xs sm:text-sm max-w-[88%] sm:max-w-[78%] shadow-sm border border-white/90 text-right">
@@ -462,9 +718,9 @@ export function CodedAiChatCard({
               </>
             ) : (
               <>
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 p-[1px] shadow-sm shrink-0 mt-0.5">
-                  <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center text-blue-600">
-                    <Bot className="w-3.5 h-3.5 animate-spin-slow" />
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-500 p-[1.5px] shadow-[0_2px_8px_rgba(37,99,235,0.2)] shrink-0 mt-0.5">
+                  <div className="w-full h-full bg-white rounded-[9px] flex items-center justify-center text-blue-600 shadow-inner">
+                    <Bot className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
                   </div>
                 </div>
                 <div className="ice-glass-card text-slate-800 rounded-2xl p-3 text-xs sm:text-sm max-w-[88%] sm:max-w-[78%] shadow-sm border border-white/90">
@@ -478,7 +734,7 @@ export function CodedAiChatCard({
           </div>
         )}
 
-        {/* Active Thinking Indicator State */}
+        {/* Active Thinking Indicator State with Explicit Mode Recognition */}
         {isExecuting && !isStreamingTyping && (
           <div
             className={`flex items-start gap-2.5 ${isRTL ? 'justify-end' : 'justify-start'}`}
@@ -486,40 +742,80 @@ export function CodedAiChatCard({
           >
             {isRTL ? (
               <>
-                <div className="order-2 w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 via-purple-500 to-pink-500 p-[1px] shadow-md shrink-0 mt-0.5 animate-codgar-thinking">
-                  <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center text-purple-600">
-                    <Bot className="w-3.5 h-3.5 animate-bounce" />
+                {/* Codgar Intelligent Thinking Avatar */}
+                <div className={`order-2 w-7 h-7 rounded-xl p-[1.5px] shrink-0 mt-0.5 shadow-md ${
+                  activeMode === 'coding'
+                    ? 'bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 animate-pulse'
+                    : 'bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-500 shadow-[0_0_15px_rgba(56,189,248,0.45)] animate-codgar-thinking'
+                }`}>
+                  <div className="w-full h-full bg-white rounded-[9px] flex items-center justify-center shadow-inner">
+                    {activeMode === 'coding' ? (
+                      <Code2 className="w-3.5 h-3.5 text-blue-600 animate-bounce" />
+                    ) : (
+                      <Bot className="w-3.5 h-3.5 text-blue-600 animate-pulse drop-shadow-[0_1px_2px_rgba(37,99,235,0.3)]" />
+                    )}
                   </div>
                 </div>
-                <div className="order-1 ice-glass-card text-slate-800 rounded-2xl px-4 py-3 text-xs sm:text-sm max-w-[88%] sm:max-w-[78%] shadow-sm border border-white/90 text-right flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping shrink-0" />
-                  <span className="font-semibold text-slate-800">
-                    کدگر در حال پردازش، اندیشیدن و اجرای دستور...
-                  </span>
-                  <span className="flex items-center gap-1 text-purple-600 mr-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:-0.3s]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:-0.15s]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" />
-                  </span>
+
+                <div className="order-1 ice-glass-card text-slate-800 rounded-2xl px-4 py-3 text-xs sm:text-sm max-w-[88%] sm:max-w-[78%] shadow-sm border border-white/90 text-right flex flex-col gap-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${activeMode === 'coding' ? 'bg-blue-600 animate-ping' : 'bg-emerald-500 animate-ping'}`} />
+                    <span className="font-bold text-slate-800">
+                      {activeMode === 'coding'
+                        ? 'من دارم می‌رم با حالت کدزنی، به من فرصت بده...'
+                        : 'کُدگر در حال اندیشیدن و پاسخگویی...'}
+                    </span>
+                    <span className="flex items-center gap-1 text-sky-600 mr-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" />
+                    </span>
+                  </div>
+                  {activeMode === 'coding' && (
+                    <p className="text-[11px] text-blue-600 font-medium mr-4 flex items-center gap-1">
+                      <Cpu className="w-3 h-3 shrink-0" />
+                      <span>در حال تحلیل معماری، تولید کدهای استاندارد و آماده‌سازی خروجی</span>
+                    </p>
+                  )}
                 </div>
               </>
             ) : (
               <>
-                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 via-purple-500 to-pink-500 p-[1px] shadow-md shrink-0 mt-0.5 animate-codgar-thinking">
-                  <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center text-purple-600">
-                    <Bot className="w-3.5 h-3.5 animate-bounce" />
+                {/* Codgar Intelligent Thinking Avatar */}
+                <div className={`w-7 h-7 rounded-xl p-[1.5px] shrink-0 mt-0.5 shadow-md ${
+                  activeMode === 'coding'
+                    ? 'bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 animate-pulse'
+                    : 'bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-500 shadow-[0_0_15px_rgba(56,189,248,0.45)] animate-codgar-thinking'
+                }`}>
+                  <div className="w-full h-full bg-white rounded-[9px] flex items-center justify-center shadow-inner">
+                    {activeMode === 'coding' ? (
+                      <Code2 className="w-3.5 h-3.5 text-blue-600 animate-bounce" />
+                    ) : (
+                      <Bot className="w-3.5 h-3.5 text-blue-600 animate-pulse drop-shadow-[0_1px_2px_rgba(37,99,235,0.3)]" />
+                    )}
                   </div>
                 </div>
-                <div className="ice-glass-card text-slate-800 rounded-2xl px-4 py-3 text-xs sm:text-sm max-w-[88%] sm:max-w-[78%] shadow-sm border border-white/90 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping shrink-0" />
-                  <span className="font-semibold text-slate-800">
-                    Codgar is thinking & executing prompt...
-                  </span>
-                  <span className="flex items-center gap-1 text-purple-600 ml-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:-0.3s]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce [animation-delay:-0.15s]" />
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce" />
-                  </span>
+
+                <div className="ice-glass-card text-slate-800 rounded-2xl px-4 py-3 text-xs sm:text-sm max-w-[88%] sm:max-w-[78%] shadow-sm border border-white/90 flex flex-col gap-1.5" dir="ltr">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${activeMode === 'coding' ? 'bg-blue-600 animate-ping' : 'bg-emerald-500 animate-ping'}`} />
+                    <span className="font-bold text-slate-800">
+                      {activeMode === 'coding'
+                        ? 'Entering Deep Coding Mode, giving me a moment...'
+                        : 'Codgar is thinking and formulating response...'}
+                    </span>
+                    <span className="flex items-center gap-1 text-sky-600 ml-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-bounce [animation-delay:-0.3s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.15s]" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" />
+                    </span>
+                  </div>
+                  {activeMode === 'coding' && (
+                    <p className="text-[11px] text-blue-600 font-medium ml-4 flex items-center gap-1">
+                      <Cpu className="w-3 h-3 shrink-0" />
+                      <span>Analyzing architecture, generating code, and preparing output</span>
+                    </p>
+                  )}
                 </div>
               </>
             )}
@@ -548,9 +844,9 @@ export function CodedAiChatCard({
         </div>
       )}
 
-      {/* 3. Harmonious Light Liquid Glass Bottom Input Bar */}
+      {/* 3. Harmonious Modern Multi-Line Input Bar with Soft Elevation & Expandable Box */}
       <div
-        className="rounded-[24px] ice-glass-card bg-white/80 backdrop-blur-2xl p-2 flex items-center gap-2 border border-white/95 shadow-md shrink-0 relative transition-all duration-300 hover:border-blue-300/80"
+        className="rounded-[26px] sm:rounded-[28px] ice-glass-card bg-white/95 backdrop-blur-2xl p-2 sm:p-2.5 flex items-end gap-2 border border-white/95 shadow-lg shadow-blue-900/5 shrink-0 relative transition-all duration-300 focus-within:ring-2 focus-within:ring-blue-400/40 focus-within:border-blue-300 hover:border-blue-200"
         dir={isRTL ? 'rtl' : 'ltr'}
       >
         {/* Hidden File Input */}
@@ -565,55 +861,65 @@ export function CodedAiChatCard({
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="p-2.5 rounded-full text-slate-500 hover:text-blue-600 hover:bg-white/70 transition cursor-pointer shrink-0 active:scale-95"
+          className="p-2.5 mb-0.5 rounded-full text-slate-500 hover:text-blue-600 hover:bg-blue-50/80 transition cursor-pointer shrink-0 active:scale-95"
           title={t.attachFile}
         >
           <Paperclip className="w-4 h-4" />
         </button>
 
-        {/* Main Text Input with Slightly Bolder Typography */}
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={t.typeMessagePlaceholder}
-          dir={isRTL ? 'rtl' : 'ltr'}
-          className={`flex-1 bg-transparent px-3 text-xs sm:text-sm font-sans font-semibold text-slate-900 placeholder:text-slate-500 placeholder:font-medium outline-none transition-all ${
-            isRTL ? 'text-right placeholder:text-right' : 'text-left placeholder:text-left'
-          }`}
-        />
+        {/* Multi-line Auto-Expanding Textarea */}
+        <div className="flex-1 min-w-0 py-1 px-1">
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={
+              activeMode === 'chat'
+                ? (isRTL ? 'پیام یا سوال خود را مطرح کنید (مشاوره، گفتگو، تحلیل هوشمند)...' : 'Type your message (conversational chat, Q&A, advice)...')
+                : (isRTL ? 'توصیف پروژه یا برنامه‌ای که می‌خواهید ساخته شود (ساخت سایت، بازی، ابزار)...' : 'Describe the project, app, or website to build live...')
+            }
+            dir={isRTL ? 'rtl' : 'ltr'}
+            className={`w-full bg-transparent resize-none overflow-y-auto max-h-[160px] min-h-[38px] text-xs sm:text-sm font-sans font-semibold text-slate-900 placeholder:text-slate-500 placeholder:font-medium outline-none transition-all custom-scrollbar leading-relaxed ${
+              isRTL ? 'text-right placeholder:text-right' : 'text-left placeholder:text-left'
+            }`}
+          />
+        </div>
 
-        {/* Voice / Siri Mic Button */}
-        <button
-          type="button"
-          onClick={onOpenSiriVoice}
-          className={`p-2.5 rounded-full transition cursor-pointer flex items-center justify-center shrink-0 active:scale-95 ${
-            isRecordingVoice
-              ? 'w-8 h-8 bg-gradient-to-tr from-cyan-400 via-pink-500 to-rose-400 text-white shadow-[0_0_20px_rgba(251,113,133,0.7)] animate-spin-slow'
-              : 'text-slate-500 hover:text-blue-600 hover:bg-white/70'
-          }`}
-          title={t.liveVoice}
-        >
-          {isRecordingVoice ? (
-            <div className="w-full h-full rounded-full flex items-center justify-center bg-black/20 backdrop-blur-xs">
-              <Mic className="w-4 h-4 text-white animate-pulse" />
-            </div>
-          ) : (
-            <Mic className="w-4 h-4" />
-          )}
-        </button>
+        {/* Action Buttons Right/Left Side */}
+        <div className="flex items-center gap-1.5 shrink-0 mb-0.5">
+          {/* Voice / Siri Mic Button */}
+          <button
+            type="button"
+            onClick={onOpenSiriVoice}
+            className={`p-2.5 rounded-full transition cursor-pointer flex items-center justify-center shrink-0 active:scale-95 ${
+              isRecordingVoice
+                ? 'w-8.5 h-8.5 bg-gradient-to-tr from-cyan-400 via-pink-500 to-rose-400 text-white shadow-[0_0_20px_rgba(251,113,133,0.7)] animate-spin-slow'
+                : 'text-slate-500 hover:text-blue-600 hover:bg-blue-50/80'
+            }`}
+            title={t.liveVoice}
+          >
+            {isRecordingVoice ? (
+              <div className="w-full h-full rounded-full flex items-center justify-center bg-black/20 backdrop-blur-xs">
+                <Mic className="w-4 h-4 text-white animate-pulse" />
+              </div>
+            ) : (
+              <Mic className="w-4 h-4" />
+            )}
+          </button>
 
-        {/* Coral Pink / Sky Send Button */}
-        <button
-          type="button"
-          onClick={handleSend}
-          disabled={!inputText.trim() && !attachedFileName}
-          className="w-8.5 h-8.5 rounded-full coral-pill-btn disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center text-white shadow-md transition cursor-pointer shrink-0 active:scale-95"
-          title={t.sendMessage}
-        >
-          <Send className={`w-3.5 h-3.5 fill-current transform ${isRTL ? '' : 'rotate-180'}`} />
-        </button>
+          {/* Send Button */}
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={!inputText.trim() && !attachedFileName}
+            className="w-9 h-9 rounded-full coral-pill-btn disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center text-white shadow-md shadow-rose-500/20 transition cursor-pointer shrink-0 active:scale-95"
+            title={t.sendMessage}
+          >
+            <Send className={`w-3.5 h-3.5 fill-current transform ${isRTL ? '' : 'rotate-180'}`} />
+          </button>
+        </div>
       </div>
     </motion.div>
   );

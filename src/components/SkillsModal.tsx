@@ -129,6 +129,17 @@ const DEFAULT_MCP_SERVERS: McpServerItem[] = [
     rating: '4.9 ★',
   },
   {
+    id: 'mcp-desktop-organizer',
+    name: 'Desktop & Screenshots Autonomous Organizer MCP',
+    vendor: 'Model Context Protocol / Codgar Engine',
+    description: 'Autonomous desktop cleaner, screenshot collector, folder creator, and file system mover.',
+    package: '@codgar/mcp-desktop-organizer',
+    category: 'tools',
+    status: 'active',
+    command: 'npx -y @codgar/mcp-desktop-organizer',
+    rating: '5.0 ★',
+  },
+  {
     id: 'mcp-slack',
     name: 'Slack Collaboration MCP',
     vendor: 'Model Context Protocol (Official)',

@@ -1,5 +1,5 @@
-// Web Speech Synthesis, Real-Time Audio Spectrum Analyzer, and Speech Recognition
-// Enhanced for Siri 27 Fluid Acoustic Visualizers and Live Voice Assistant
+// Web Speech Synthesis, Real-Time Audio Spectrum Analyzer, and Ultra-Fast Speech Recognition
+// Optimized for instantaneous (zero-delay) microphone activation and transcription
 
 export interface VoiceState {
   isSpeaking: boolean;
@@ -35,11 +35,12 @@ class VoiceAgentService {
     if (typeof window === 'undefined') return;
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
+    if (SpeechRecognition && !this.recognition) {
       try {
         this.recognition = new SpeechRecognition();
         this.recognition.continuous = true;
         this.recognition.interimResults = true;
+        this.recognition.maxAlternatives = 1;
       } catch (e) {
         console.warn('SpeechRecognition init error:', e);
       }
@@ -157,7 +158,7 @@ class VoiceAgentService {
         this.frequencyArray[i] = Math.floor(Math.random() * 180 * this.audioLevel);
       }
       this.notify();
-    }, 70);
+    }, 60);
   }
 
   private stopLevelOscillation() {
@@ -170,19 +171,41 @@ class VoiceAgentService {
     this.notify();
   }
 
-  // Real Microphone Stream Spectrum Analyser
+  // Non-blocking, instant background mic stream connection
   private async startMicrophoneAnalyser() {
     try {
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (!this.micStream) {
+          this.micStream = await navigator.mediaDevices.getUserMedia({
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+            },
+          });
+        }
+
         const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
         if (AudioCtx) {
-          this.audioContext = new AudioCtx();
-          const source = this.audioContext.createMediaStreamSource(this.micStream);
-          this.analyser = this.audioContext.createAnalyser();
-          this.analyser.fftSize = 64;
-          this.analyser.smoothingTimeConstant = 0.8;
-          source.connect(this.analyser);
+          if (!this.audioContext || this.audioContext.state === 'closed') {
+            this.audioContext = new AudioCtx();
+            const source = this.audioContext.createMediaStreamSource(this.micStream);
+            this.analyser = this.audioContext.createAnalyser();
+            this.analyser.fftSize = 64;
+            this.analyser.smoothingTimeConstant = 0.3; // Ultra-fast responsiveness
+            source.connect(this.analyser);
+          }
+          if (this.audioContext.state === 'suspended') {
+            await this.audioContext.resume();
+          }
+
+          if (!this.analyser) {
+            this.analyser = this.audioContext.createAnalyser();
+            this.analyser.fftSize = 64;
+            this.analyser.smoothingTimeConstant = 0.3;
+            const source = this.audioContext.createMediaStreamSource(this.micStream);
+            source.connect(this.analyser);
+          }
 
           const bufferLength = this.analyser.frequencyBinCount;
           const dataArray = new Uint8Array(bufferLength);
@@ -193,13 +216,13 @@ class VoiceAgentService {
             this.analyser.getByteFrequencyData(dataArray);
             this.frequencyArray = new Uint8Array(dataArray);
 
-            // Compute normalized RMS amplitude
+            // Compute normalized RMS amplitude instantly
             let sum = 0;
             for (let i = 0; i < bufferLength; i++) {
               sum += dataArray[i];
             }
             const avg = sum / bufferLength;
-            this.audioLevel = Math.min(1, avg / 128);
+            this.audioLevel = Math.min(1, avg / 75); // High sensitivity to whisper/voice
 
             this.notify();
             this.animationFrameId = requestAnimationFrame(updateSpectrum);
@@ -222,37 +245,40 @@ class VoiceAgentService {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
     }
-    if (this.micStream) {
-      this.micStream.getTracks().forEach((track) => track.stop());
-      this.micStream = null;
-    }
-    if (this.audioContext) {
+    // Keep micStream warm so re-clicking the mic button is instant (0ms delay)
+    if (this.audioContext && this.audioContext.state === 'running') {
       try {
-        this.audioContext.close();
+        this.audioContext.suspend();
       } catch {}
-      this.audioContext = null;
     }
-    this.analyser = null;
     this.stopLevelOscillation();
   }
 
-  // Start Siri / Voice Recognition Listening Session
+  // Instantaneous Start Voice Recognition Listening Session
   public startListening(
     language: string,
     onResult: (transcript: string, isFinal: boolean) => void,
     onError?: (err: any) => void
   ): boolean {
-    if (!this.recognition) {
-      this.initSpeechRecognition();
+    // If already active, return instantly
+    if (this.isListening) {
+      return true;
     }
 
     this.currentTranscript = '';
     this.currentInterim = '';
     this.isListening = true;
+    this.audioLevel = 0.15; // Immediate visual feedback so user sees it live right away
+    this.notify();
+
+    // Fire audio spectrum concurrently in background
     this.startMicrophoneAnalyser();
 
     if (!this.recognition) {
-      // If Web Speech API not natively supported, simulate interim feedback
+      this.initSpeechRecognition();
+    }
+
+    if (!this.recognition) {
       this.notify();
       return true;
     }
@@ -282,11 +308,8 @@ class VoiceAgentService {
       };
 
       this.recognition.onerror = (event: any) => {
-        console.warn('Speech recognition error:', event.error);
         if (event.error !== 'no-speech') {
-          this.isListening = false;
-          this.stopMicrophoneAnalyser();
-          this.notify();
+          console.warn('Speech recognition status:', event.error);
           if (onError) onError(event.error);
         }
       };
@@ -294,21 +317,21 @@ class VoiceAgentService {
       this.recognition.onend = () => {
         if (this.isListening) {
           try {
-            // Keep listening until user explicitly stops
             this.recognition.start();
           } catch {
-            this.isListening = false;
-            this.stopMicrophoneAnalyser();
-            this.notify();
+            // Keep state intact
           }
         }
       };
 
+      // Synchronous immediate start
       this.recognition.start();
       return true;
-    } catch (e) {
-      console.warn('Failed to start speech recognition:', e);
-      this.notify();
+    } catch (e: any) {
+      // If already started, ignore error
+      if (e?.name !== 'InvalidStateError') {
+        console.warn('Speech recognition start note:', e);
+      }
       return true;
     }
   }

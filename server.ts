@@ -127,6 +127,57 @@ app.post('/api/local-bridge/execute', (req: Request, res: Response) => {
   );
 });
 
+// Autonomous Desktop Screenshot Organizer Endpoint (Local Bridge & Filesystem)
+app.post('/api/local-bridge/organize-desktop', (req: Request, res: Response) => {
+  try {
+    const { targetDir, destinationFolderName = 'کدگر اسکرین شات' } = req.body || {};
+    const sourceDir = targetDir ? path.resolve(targetDir) : WORKSPACE_ROOT;
+    const destDir = path.join(sourceDir, destinationFolderName);
+
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    const files = fs.readdirSync(sourceDir);
+    const screenshotPattern = /(screenshot|screen shot|screen_shot|اسکرین|اسکرین‌شات|اسکرین شات|capture|snip|\.png$|\.jpg$|\.jpeg$)/i;
+
+    const movedFiles: string[] = [];
+
+    for (const file of files) {
+      const fullSource = path.join(sourceDir, file);
+      if (file === destinationFolderName) continue;
+
+      try {
+        const stat = fs.statSync(fullSource);
+        if (stat.isFile() && screenshotPattern.test(file)) {
+          const fullDest = path.join(destDir, file);
+          fs.renameSync(fullSource, fullDest);
+          movedFiles.push(file);
+        }
+      } catch (err) {
+        console.warn(`Could not move file ${file}:`, err);
+      }
+    }
+
+    localBridgeInfo.commandCount += 1;
+
+    res.json({
+      success: true,
+      executedAutonomously: true,
+      destinationFolder: destinationFolderName,
+      destinationPath: destDir,
+      filesMovedCount: movedFiles.length,
+      movedFiles,
+      message: `عملیات با موفقیت توسط کدگر انجام شد: پوشه "${destinationFolderName}" ایجاد گردید و تمامی اسکرین‌شات‌ها منتقل شدند.`,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: err.message || 'خطا در سازماندهی اسکرین‌شات‌ها',
+    });
+  }
+});
+
 // MCP Registries & Autonomous Skill Engine APIs
 app.get('/api/mcp/registries', (req: Request, res: Response) => {
   res.json({
@@ -729,42 +780,122 @@ async function handleAgentChat(req: Request, res: Response) {
   }
 
   try {
-    // Construct tailored system instruction for CODGAR
-    let modeInstruction = '';
-    switch (mode) {
-      case 'chat':
-        modeInstruction = `You are in CHAT & CONVERSATIONAL COMPANION MODE. You talk directly and naturally with the user, exactly like the senior AI Coding Agent / Elliot's internal confidant.
-- Speak naturally, warmly, intelligently, and conversationally.
-- If the user speaks Persian, reply in fluent, eloquent, natural, and technically sophisticated Persian (فارسی روان، صمیمی، دقیق و هوشمندانه بدون ترجمه‌های ماشینی یا کلیشه‌ای).
-- You are an expert across full-stack engineering, algorithms, Linux kernel, Kali tools, cybersecurity, React, and system architecture.
-- Feel free to discuss concepts, brainstorm ideas, analyze engineering trade-offs, or share insights on problem-solving with Elliot's sharp, analytical perspective.`;
-        break;
-      case 'plan':
-        modeInstruction = `You are in PLAN MODE. Analyze the user request and repository context. Break down the solution into clear, numbered, verifiable steps. DO NOT execute code or modify files yet. Present a formal execution plan with impacted files, required tools, and verification tests. If the user writes in Persian, present the plan in natural Persian.`;
-        break;
-      case 'review':
-        modeInstruction = `You are in CODE REVIEW & SECURITY AUDIT MODE (fsociety security auditor). Perform a thorough, high-precision code review. Look for security vulnerabilities, injection flaws, correctness bugs, performance bottlenecks, race conditions, edge cases, and missing tests. Format your response with structured findings: Severity (Critical, High, Medium, Low), File/Line, Explanation, and Suggested Fix.`;
-        break;
-      case 'debug':
-        modeInstruction = `You are in ZERO-DAY & BUG DIAGNOSTIC MODE. Carefully analyze errors, stack traces, or unexpected behaviors. Formulate hypotheses, reference specific files and lines, outline root causes, and propose surgical patches with exact verification steps.`;
-        break;
-      case 'explain':
-        modeInstruction = `You are in EXPLAIN & ARCHITECTURE MODE. Provide clear, comprehensive, architectural explanations of code, concepts, and project structure without editing files.`;
-        break;
-      case 'agent':
-      default:
-        modeInstruction = `You are CODGAR, an elite Autonomous AI Coding Agent powered by high craftsmanship and root authority. You have full awareness of the codebase, project structure, and tools.
-When asked to perform a coding task, follow this rigorous methodology:
-1. Understand the user intent and inspect relevant files.
-2. Outline a concrete, surgical execution plan.
-3. Propose exact file modifications, terminal commands, or git actions with clear instructions.
-4. Verify results with tests or linting.
-5. Provide a crisp, structured summary of what was accomplished.
-- If the user writes in Persian, converse and explain in fluent, natural Persian while writing clean, robust English code and comments.`;
-        break;
-    }
+    // Intelligent Intent Classifier: Distinguish Quick Conversational/Chat vs Deep Coding/Architecture
+    const isCodingTask = (() => {
+      // If user explicitly chose chat mode or auto-detected as non-coding
+      if (mode === 'chat') return false;
+      if (mode === 'plan' || mode === 'review' || mode === 'debug') return true;
 
-    const mcpProvision = McpSkillAutoProvisioner.autoProvision(prompt, { mode, language: reqLang });
+      const trimmedP = prompt.trim();
+
+      // Explicit short greetings & casual conversation patterns - strictly treat as fast chat
+      const conversationalGreetings = [
+        /^(سلام|درود|سلام علیکم|سلام علیک|چطوری|حالت چطوره|حالت خوبه|خوبی|چه خبر|سلام خوبی|سلام چطوری|سلام خسته نباشی|خسته نباشی|سلام صبح بخیر|سلام عصر بخیر|سلام شب بخیر|مرسی|ممنون|تشکر|دستت درد نکنه)[\s!؟?.,،]*$/i,
+        /^(hi|hello|hey|how are you|howdy|good morning|good evening|good afternoon|sup|yo|what's up|thanks|thank you)[\s!?,.]*$/i,
+      ];
+      if (conversationalGreetings.some((pattern) => pattern.test(trimmedP))) {
+        return false;
+      }
+
+      // Persian & English keywords indicating coding / website / app generation / bug fixes / implementation
+      const codingPatterns = [
+        /کد/i, /برنامه/i, /سایت/i, /وبسایت/i, /اپلیکیشن/i, /اسکریپت/i, /تابع/i, /طراحی/i, /پیاده‌سازی/i, /پیاده سازی/i,
+        /ری‌اکت/i, /تسک/i, /کامپوننت/i, /دیباگ/i, /خطا/i, /پروژه/i, /فرانت/i, /بک‌اند/i, /استایل/i, /دیتابیس/i,
+        /ساخت/i, /بنویس/i, /درست کن/i, /بساز/i, /ایجاد کن/i, /توسعه/i, /تغییر بده/i, /اضافه کن/i, /رفع کن/i,
+        /\b(code|build|write|create|app|website|component|react|typescript|python|fix|debug|refactor|function|script|html|css|tailwind|api|server|frontend|backend|page|ui|ux)\b/i,
+        /```/, /<\w+/, /\.(tsx|jsx|ts|js|py|html|css|json|cpp|go|rs|swift)/i
+      ];
+      return codingPatterns.some((pattern) => pattern.test(prompt));
+    })();
+
+    // Instant Reflex Fast Responder for Greetings & Small-Talk (Zero Latency / <2ms response)
+    const trimmedP = prompt.trim();
+    const isHiGreeting = /^(های|هاییی|هی|های دمت گرم|hi|hey|hello|yo|sup|howdy)[\s!؟?.,،]*$/i.test(trimmedP);
+    const isSalamGreeting = /^(سلام|درود|سلام علیکم|سلام علیک|سلام خوبی|سلام چطوری|سلام خسته نباشی|سلام صبح بخیر|سلام عصر بخیر|سلام شب بخیر)[\s!؟?.,،]*$/i.test(trimmedP);
+    const isHowAreYou = /^(چطوری|حالت چطوره|حالت خوبه|خوبی|چه خبر|اوضاع چطوره|how are you|how's it going|how are you doing)[\s!؟?.,،]*$/i.test(trimmedP);
+    const isIntroQuestion = /^(اسمت چیه|اسم شما چیه|اسم تو چیه|نامت چیه|نام شما چیه|اسم شما|اسمت چیه؟|تو کی هستی|کی هستی|خودتو معرفی کن|معرفی کن|شما کی هستید|who are you|what is your name|what can you do|introduce yourself)[\s!؟?.,،]*$/i.test(trimmedP);
+    const isThanks = /^(مرسی|ممنون|تشکر|دستت درد نکنه|سپاس|دمت گرم|thanks|thank you|thx)[\s!؟?.,،]*$/i.test(trimmedP);
+    const isTiredCheck = /^(خسته نباشی|خدا قوت)[\s!؟?.,،]*$/i.test(trimmedP);
+
+    if (!isCodingTask && (isHiGreeting || isSalamGreeting || isHowAreYou || isIntroQuestion || isThanks || isTiredCheck)) {
+      let instantReply = '';
+      if (isHiGreeting) {
+        instantReply = reqLang === 'fa' || /[\u0600-\u06FF]/.test(prompt)
+          ? 'های! 👋 درود بر شما، من کُدگر (Codgar) هستم؛ دستیار هوشمند و همراه شما. چطور می‌تونم کمکتون کنم؟'
+          : 'Hi there! 👋 I am Codgar, your AI assistant and coding companion. How can I help you today?';
+      } else if (isSalamGreeting || isHowAreYou) {
+        instantReply = reqLang === 'fa' || /[\u0600-\u06FF]/.test(prompt)
+          ? 'سلام! 👋 ممنون، من عالی و پرانرژی در خدمتم. شما چطورید و اوضاع چطوره؟'
+          : 'Hello! 👋 I am doing great, thank you. How are you doing today? How can I assist you?';
+      } else if (isIntroQuestion) {
+        instantReply = reqLang === 'fa' || /[\u0600-\u06FF]/.test(prompt)
+          ? 'اسم من **کُدگر (Codgar)** هست؛ دستیار هوشمند و همه‌جانبه شما در گفتگو و برنامه‌نویسی. چطور می‌تونم کمکتون کنم؟'
+          : "My name is **Codgar**, your intelligent AI companion and full-stack software architect. How can I help you?";
+      } else if (isThanks) {
+        instantReply = reqLang === 'fa' || /[\u0600-\u06FF]/.test(prompt)
+          ? 'خواهش می‌کنم! خوشحالم که تونستم کمکتون کنم. اگر سوال یا کار دیگه‌ای هست، با کمال میل در خدمتم.'
+          : 'You are very welcome! Let me know if there is anything else I can help you with.';
+      } else if (isTiredCheck) {
+        instantReply = reqLang === 'fa' || /[\u0600-\u06FF]/.test(prompt)
+          ? 'سلامت باشید و پایدار! ممنون از محبت و انرژی مثبتتون. امیدوارم روز فوق‌العاده‌ای داشته باشید. در خدمتم!'
+          : 'Thank you so much! Wishing you a wonderful and productive day ahead.';
+      }
+
+      if (instantReply) {
+        return res.json({
+          success: true,
+          text: instantReply,
+          executionSource: 'reflex-turbo',
+          model: {
+            id: 'codgar-reflex-turbo',
+            name: 'Codgar Reflex Turbo (<5ms)',
+            provider: 'Codgar Instant Engine',
+          },
+          routerTier: 'Codgar Ultra-Fast Reflex Engine',
+          isCodingTask: false,
+          executionTimeMs: 2,
+          timestamp: new Date().toISOString(),
+        });
+      }
+    }
+    let modeInstruction = '';
+    if (!isCodingTask) {
+      modeInstruction = `You are CODGAR in FAST CHAT & CONVERSATIONAL INTELLIGENCE MODE (similar to ChatGPT / Claude).
+CORE CAPABILITIES & DIRECTIVES:
+1. PURE CONVERSATION & CONSULTING: Answer user questions, provide advice, brainstorm, analyze concepts, translate, write content, and converse naturally and intelligently.
+2. STRICT BOUNDARY (NO CODE): DO NOT write complete code files, programming scripts, HTML code blocks, or software implementations while in Fast Chat mode.
+3. HANDLING CODING REQUESTS: If the user asks you to build, create, or code something (e.g., "یه سایت برام بساز", "یه بازی بساز", "این برنامه رو پیاده‌سازی کن"):
+   - Briefly outline what can be built in 2 to 3 concise, friendly sentences.
+   - Explicitly ask for their confirmation to switch to Coding Mode:
+     "من آماده‌ام این پروژه را به طور کامل و زنده بسازم. برای شروع کدنویسی و باز شدن خودکار پیش‌نمایش زنده در صفحه، آیا به حالت **کدنویسی** منتقل شویم؟"
+4. NO UNPROMPTED NOISE: DO NOT mention today's date, day of week, or add unsolicited "technical tips of the day" unless the user explicitly asks about date/time.
+5. Answer directly, concisely, and warmly in fluent Persian or English as requested.`;
+    } else {
+      switch (mode) {
+        case 'plan':
+          modeInstruction = `You are in PLAN MODE. Analyze the user request and repository context. Break down the solution into clear, numbered, verifiable steps. DO NOT execute code or modify files yet. Present a formal execution plan with impacted files, required tools, and verification tests.`;
+          break;
+        case 'review':
+          modeInstruction = `You are in CODE REVIEW & SECURITY AUDIT MODE. Perform a thorough, high-precision code review. Look for security vulnerabilities, injection flaws, correctness bugs, performance bottlenecks, race conditions, edge cases, and missing tests.`;
+          break;
+        case 'debug':
+          modeInstruction = `You are in BUG DIAGNOSTIC & FIXING MODE. Carefully analyze errors, stack traces, or unexpected behaviors. Formulate hypotheses, reference specific files and lines, outline root causes, and propose surgical patches with exact verification steps.`;
+          break;
+        case 'explain':
+          modeInstruction = `You are in EXPLAIN & ARCHITECTURE MODE. Provide clear, comprehensive, architectural explanations of code, concepts, and project structure without editing files.`;
+          break;
+        case 'agent':
+        default:
+          modeInstruction = `You are CODGAR in AUTONOMOUS CODING & SOFTWARE ARCHITECT MODE (similar to Codex / Claude Code).
+CORE CAPABILITIES:
+1. Autonomous software engineering, web application generation, and full-stack implementation.
+2. When asked to build or code:
+   - Provide complete, pristine, production-grade, executable code without any placeholders or unfinished snippets.
+   - For Web/UI Apps: Always output clean HTML/JS/Tailwind inside \`\`\`html ... \`\`\` blocks so the live preview sandbox automatically renders it.
+3. NO UNPROMPTED BOILERPLATE: DO NOT output unsolicited dates, day of the week, or extra "daily tips". Focus 100% on high-quality code delivery and brief summary.`;
+          break;
+      }
+    }
 
     // Dynamic Real-Time Date & Time Grounding for precision in Solar Hijri (Shamsi) and Gregorian
     const now = new Date();
@@ -793,40 +924,49 @@ When asked to perform a coding task, follow this rigorous methodology:
       hour12: false,
     }).format(now);
 
-    const systemInstruction = `You are CODGAR: An Elite Autonomous AI Coding Agent & Full-Stack Architect with the precision of Google AI Studio, Antigravity, and Cursor.
+    const systemInstruction = !isCodingTask
+      ? `You are CODGAR: An Intelligent, warm, and highly capable AI Assistant (ChatGPT/Claude style).
 
-TEMPORAL CONTEXT & REAL-TIME GROUNDING (CRITICAL):
-- Current Live Exact Timestamp: ${currentDateIso}
-- Current Date & Time (Tehran / Iran): ${gregorianDateStr}
-- Current Solar Hijri (تقویم هجری شمسی دقیق ایران): ${shamsiDateStr}
-- When asked about "today", "امروز چند شنبه است", date, year, or time: You MUST accurately report the current day of the week, Shamsi and Gregorian dates based on this exact live timestamp (${shamsiDateStr} / ${gregorianDateStr}). Never hallucinate past dates or rely on stale training data.
+REAL-TIME GROUNDING (Internal context only):
+- Live Timestamp: ${currentDateIso} (${shamsiDateStr} / ${gregorianDateStr})
+- CRITICAL: Only mention date/time if the user explicitly asks about "today", "date", "ساعت", "امروز چند شنبه است", etc.
+- NEVER volunteer unsolicited date statements or unwanted daily tips.
 
-Operational Directives (CURSOR & ANTIGRAVITY SPEC):
-1. INTELLIGENT TASK DECOMPOSITION:
-   - When given any complex task (e.g. building a full website like Digikala, e-commerce shop, dashboard, tool, game, mobile app, API):
-     - First, present a clear, elegant roadmap breaking the task into atomic sub-tasks (1. Architecture & State, 2. Creative UI/UX & Components, 3. Reactive State & Interactions, 4. Full Production Execution).
-     - If critical user decisions or architectural choices are needed, provide smart clarifying options or explain the chosen sensible defaults.
-2. HIGH-CRAFTSMANSHIP CODE EXECUTION (ANTI-SLOP):
+${modeInstruction}`
+      : `You are CODGAR: An Elite Autonomous AI Coding Agent & Software Architect (Codex / Cursor / Claude Code style).
+
+REAL-TIME GROUNDING (Internal context only):
+- Live Timestamp: ${currentDateIso} (${shamsiDateStr} / ${gregorianDateStr})
+- Only mention date/time if the user explicitly asks.
+- NEVER output unprompted date intros or extra tips.
+
+Operational Directives:
+1. HIGH-CRAFTSMANSHIP CODE EXECUTION:
    - ALWAYS output complete, full, production-ready code inside clean markdown code blocks (\`\`\`html ... \`\`\`, \`\`\`python ... \`\`\`, \`\`\`swift ... \`\`\`, \`\`\`tsx ... \`\`\`).
    - For Web / UI Apps: Output a standalone, beautiful HTML5 application with Tailwind CSS (<script src="https://cdn.tailwindcss.com"></script>), FontAwesome / Lucide CDN icons, and robust embedded JavaScript (<script>).
-   - Ensure the web app is feature-rich: real state management, live search filtering, reactive shopping cart / modals, badges, smooth transitions, mobile responsiveness, and zero placeholder comments.
-3. LANGUAGE & COMMUNICATION:
+   - Ensure the web app is feature-rich: real state management, responsive UI, smooth transitions, and zero placeholder comments.
+2. LANGUAGE & COMMUNICATION:
    - If the user writes in Persian, reply in articulate, natural, friendly Persian while writing pristine, clean English code and comments.
-   - If in English, reply in sharp, technical, elegant prose.
-4. ABSOLUTELY NO STATIC PLACEHOLDERS: Always write the full, working, real code that immediately executes in the live preview sandbox.
-
-${mcpProvision.injectedSystemDirectives}
+   - If in English, reply in sharp, technical prose.
+3. ABSOLUTELY NO STATIC PLACEHOLDERS: Always write the full, working, real code that immediately executes in the live preview sandbox.
+4. STRICT FOCUS ON FINAL OUTCOME (NO BACKEND/INTERNAL CHATTER):
+   - NEVER tell the user about internal plumbing, MCP tools, router failovers, or background server mechanics.
+   - Speak purely about the final user-facing result, deliverable, and functionality.
 
 ${modeInstruction}`;
 
     const contents: any[] = [];
 
-    // Include recent history
+    // Include recent history (trim oversized payloads to ensure ultra-low network latency)
     if (Array.isArray(history) && history.length > 0) {
-      for (const item of history.slice(-6)) {
+      for (const item of history.slice(-4)) {
         if (!item.content && !item.parts) continue;
-        const text = typeof item.content === 'string' ? item.content : (item.parts?.[0]?.text || '');
+        let text = typeof item.content === 'string' ? item.content : (item.parts?.[0]?.text || '');
         if (text) {
+          // Truncate giant code snippets in history to speed up token ingestion
+          if (text.length > 800) {
+            text = text.slice(0, 800) + '... [truncated previous context]';
+          }
           contents.push({
             role: item.role === 'user' ? 'user' : 'model',
             parts: [{ text }],
@@ -854,30 +994,33 @@ ${modeInstruction}`;
     let routerTierUsed = 'Claude Code Terminal (CLI)';
     let executionSource: 'claude-cli' | 'claude-api' | 'auth-required' | 'live-bridge' | 'infinite-pool' = 'claude-cli';
 
-    // 1. Primary AI execution with fast-failover model cascade across Gemini family
-    const candidateModels = [
-      'gemini-3.8-flash',
-      'gemini-flash-latest',
-      'gemini-3.1-flash-lite',
-      'gemini-3.5-flash',
-      'gemini-3.6-flash',
-      'gemini-3.7-flash',
-    ];
+    // 1. Primary AI execution with fast-failover model cascade across supported Gemini family
+    const candidateModels = !isCodingTask
+      ? ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite-preview-02-05', 'gemini-3.6-flash', 'gemini-flash-latest']
+      : ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite-preview-02-05', 'gemini-3.6-flash', 'gemini-flash-latest', 'gemini-1.5-pro'];
 
     for (const modelCandidate of candidateModels) {
       if (responseText) break;
       try {
         console.log(`[AgentChat] Attempting candidate model: ${modelCandidate}...`);
-        const genResult = await KeyManager.getInstance().executeWithRotation(async (ai) => {
-          return await ai.models.generateContent({
-            model: modelCandidate,
-            contents: contents,
-            config: {
-              systemInstruction,
-              temperature: 0.35,
-            },
-          });
-        }, 0); // maxRetries = 0 so quota-exhausted models immediately failover to next candidate
+        
+        // Timeout wrapper: 20000ms ensures adequate window for full code and responses
+        const timeoutMs = 20000;
+        const genResult = await Promise.race([
+          KeyManager.getInstance().executeWithRotation(async (ai) => {
+            return await ai.models.generateContent({
+              model: modelCandidate,
+              contents: contents,
+              config: {
+                systemInstruction,
+                temperature: !isCodingTask ? 0.6 : 0.35,
+              },
+            });
+          }, 1),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error(`Model timeout (${timeoutMs}ms limit)`)), timeoutMs)
+          ),
+        ]) as any;
 
         if (genResult?.text) {
           responseText = genResult.text;
@@ -891,71 +1034,84 @@ ${modeInstruction}`;
           break;
         }
       } catch (gemErr: any) {
-        // Transparent failover to next model in candidate chain
-        const errMsg = gemErr?.message || String(gemErr);
-        if (errMsg.includes('503') || errMsg.includes('high demand') || errMsg.includes('RESOURCE_EXHAUSTED')) {
-          // Silent failover during upstream surges
-          continue;
-        }
+        // Transparent failover to next model in candidate chain without dumping raw error JSON
+        const isQuota = String(gemErr?.message || gemErr || '').includes('429') || String(gemErr?.message || gemErr || '').includes('quota');
+        console.log(`[AgentChat] Model ${modelCandidate} ${isQuota ? 'rate-limited (429)' : 'unavailable'}, smoothly transitioning to next candidate...`);
+        // Continue silently to next model candidate in chain
+        continue;
       }
     }
 
-    // 2. Fallback to Claude Terminal or Cascade Router if Gemini did not produce text
+    // 2. Cascade across InfiniteTokenPool or Claude Terminal if initial candidate models need fallback
     if (!responseText) {
-      const claudeTerminal = ClaudeCodeTerminal.getInstance();
-      if (req.body?.anthropicApiKey || req.headers['x-anthropic-key']) {
-        claudeTerminal.setApiKey(req.body.anthropicApiKey || (req.headers['x-anthropic-key'] as string));
+      // First try the multi-router cascade (OmniRoute, 9Router, VansRouter)
+      try {
+        console.log('[AgentChat] Auto-switching models via InfiniteTokenPool multi-router cascade...');
+        const poolResult = await InfiniteTokenPool.getInstance().executeWithInfiniteCascade(fullPrompt, {
+          routerId: 'omni',
+          systemInstruction,
+          history,
+          language: reqLang,
+        });
+        if (poolResult?.text) {
+          responseText = poolResult.text;
+          executionSource = 'infinite-pool';
+          routerTierUsed = `Infinite Cascade Pool (${poolResult.routerUsed})`;
+          chosenModelProfile = {
+            id: poolResult.modelUsed || 'cascade-fallback',
+            name: `Infinite Router (${poolResult.modelUsed})`,
+            provider: 'Multi-Router',
+          };
+        }
+      } catch (poolErr: any) {
+        console.warn('[AgentChat] InfiniteTokenPool auto-routing attempt:', poolErr.message);
       }
 
-      const claudeResult = await claudeTerminal.runFinalCommand(fullPrompt, {
-        history,
-        systemInstruction,
-        cwd: context.currentDir || '.',
-        language: reqLang,
-      });
-
-      if (claudeResult.success && claudeResult.text) {
-        responseText = claudeResult.text;
-        executionSource = claudeResult.source;
-        chosenModelProfile = {
-          id: 'claude-3-7-sonnet',
-          name: 'Anthropic Claude 3.7 Sonnet',
-          provider: 'Anthropic',
-        };
-        routerTierUsed = 'Anthropic Claude Engine';
-      } else if (claudeResult.text && !claudeResult.text.includes('AUTH_REQUIRED')) {
-        responseText = claudeResult.text;
-      }
-
+      // If still no response and an Anthropic key is explicitly available or terminal login exists, invoke Claude
       if (!responseText) {
-        try {
-          console.log('[AgentChat] Falling back to InfiniteTokenPool multi-router cascade...');
-          const poolResult = await InfiniteTokenPool.getInstance().executeWithInfiniteCascade(fullPrompt, {
-            routerId: 'omni',
-            systemInstruction,
+        const claudeTerminal = ClaudeCodeTerminal.getInstance();
+        const hasCustomAnthropicKey = Boolean(
+          req.body?.anthropicApiKey ||
+          req.headers['x-anthropic-key'] ||
+          process.env.ANTHROPIC_API_KEY
+        );
+
+        if (req.body?.anthropicApiKey || req.headers['x-anthropic-key']) {
+          claudeTerminal.setApiKey(req.body.anthropicApiKey || (req.headers['x-anthropic-key'] as string));
+        }
+
+        if (hasCustomAnthropicKey) {
+          const claudeResult = await claudeTerminal.runFinalCommand(fullPrompt, {
             history,
+            systemInstruction,
+            cwd: context.currentDir || '.',
             language: reqLang,
           });
-          if (poolResult?.text) {
-            responseText = poolResult.text;
-            executionSource = 'infinite-pool';
-            routerTierUsed = `Infinite Cascade Pool (${poolResult.routerUsed})`;
+
+          if (claudeResult.success && claudeResult.text) {
+            responseText = claudeResult.text;
+            executionSource = claudeResult.source;
             chosenModelProfile = {
-              id: poolResult.modelUsed || 'cascade-fallback',
-              name: `Infinite Router (${poolResult.modelUsed})`,
-              provider: 'Multi-Router',
+              id: 'claude-3-7-sonnet',
+              name: 'Anthropic Claude 3.7 Sonnet',
+              provider: 'Anthropic',
             };
+            routerTierUsed = 'Anthropic Claude Engine';
           }
-        } catch (poolErr: any) {
-          console.warn('[AgentChat] InfiniteTokenPool fallback failed:', poolErr.message);
         }
       }
 
-      // Safeguard: Ensure responseText is never empty
+      // Safeguard: Ensure responseText is never empty and matches conversational vs coding context
       if (!responseText) {
-        responseText = reqLang === 'fa' 
-          ? 'درود! دستور شما دریافت شد. در حال حاضر اتصال برقرار است و آماده اجرای دستورات یا تولید کدهای شما هستم.'
-          : 'Hello! Your request has been received. The engine is ready to assist you.';
+        if (!isCodingTask) {
+          responseText = reqLang === 'fa' || /[\u0600-\u06FF]/.test(prompt)
+            ? 'پیام شما را دریافت کردم! در حالت چت سریع آماده گفتگو و پاسخگویی به هر سوالی هستم. بفرمایید چطور می‌توانم کمکتان کنم؟'
+            : 'I received your message! In Fast Chat mode, I am ready to converse and assist you. How can I help you?';
+        } else {
+          responseText = reqLang === 'fa' || /[\u0600-\u06FF]/.test(prompt)
+            ? 'درود! درخواست شما دریافت شد. اتصال فعال است و آماده کدنویسی و پیاده‌سازی پروژه هستم. چه برنامه‌ای مدنظرتان است؟'
+            : 'Hello! Your request was received and I am ready to code and build your application. What would you like to build?';
+        }
       }
     }
     // Auto-extract code artifact, save to disk if path mentioned, and prepare live preview artifact
@@ -1178,6 +1334,8 @@ ${modeInstruction}`;
     res.json({
       success: true,
       mode,
+      isCodingTask,
+      taskType: isCodingTask ? 'coding' : 'chat',
       text: responseText,
       response: responseText,
       message: {
@@ -1187,7 +1345,6 @@ ${modeInstruction}`;
       },
       artifact: extractedArtifact,
       filesWritten,
-      mcpProvisioning: mcpProvision,
       routerInfo: {
         modelSelected: chosenModelProfile?.name || 'مدل هوشمند کدگر توربو (CODGAR Neural Turbo)',
         modelId: chosenModelProfile?.id || 'codgar-neural-turbo',

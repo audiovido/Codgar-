@@ -217,28 +217,38 @@ export default function App() {
         id: 'msg-welcome',
         role: 'agent',
         content: isFa
-          ? `سلام! من **کدگر (Codgar AI)** هستم؛ دستیار هوشمند و ایجنت کدنویسی مستقل شما با دسترسی کامل به فایل‌ها، ترمینال، پیش‌نمایش زنده کامپایلر و مخزن نامحدود توکن‌ها.\n\nهر پروژه، کامپوننت، فیچر یا اسکریپتی که می‌خواهید بسازید را بنویسید تا مستقیماً اجرا و کامپایل شود.`
-          : `Hello! I am **Codgar AI**, your autonomous coding agent with full workspace access, live compiler sandbox, terminal execution, and infinite token routing.\n\nWhat would you like to build or modify today?`,
+          ? `سلام! من **کدگر** هستم؛ دستیار هوشمند برنامه‌نویسی شما.\n\nچه پروژه یا فیچری مد نظرتان است؟ درخواست خود را بنویسید یا با دکمه ضبط صدا بیان کنید تا آماده شود.`
+          : `Hello! I am **Codgar**, your intelligent coding assistant.\n\nWhat would you like to build or work on today?`,
         timestamp: Date.now(),
       },
     ]);
   }, [refreshWorkspaceData, isFa]);
 
+  // Quick client-side check to detect coding intent for immediate UI feedback
+  const [activeTaskIntent, setActiveTaskIntent] = useState<'chat' | 'coding'>('chat');
+
   // Handle Send Message to AI Agent
-  const handleSendMessage = async (text: string, mode: AgentMode = 'agent') => {
+  const handleSendMessage = async (text: string, mode: AgentMode = 'chat') => {
     if (!text.trim() || isExecuting) return;
+
+    // Strict Mode Enforcement: If user chose 'chat', strictly fast conversation; if 'agent' or code modes, strictly coding.
+    const isCodingPrompt = mode === 'agent' || mode === 'plan' || mode === 'review' || mode === 'debug';
+
+    setActiveTaskIntent(isCodingPrompt ? 'coding' : 'chat');
 
     const userMsg: Message = {
       id: `msg-user-${Date.now()}`,
       role: 'user',
       content: text,
       timestamp: Date.now(),
+      isCodingTask: isCodingPrompt,
+      taskType: isCodingPrompt ? 'coding' : 'chat',
     };
 
     setMessages((prev) => [...prev, userMsg]);
     setIsExecuting(true);
-    setAgentState('planning');
-    setActiveWorker('coder');
+    setAgentState(isCodingPrompt ? 'planning' : 'writing');
+    setActiveWorker(isCodingPrompt ? 'coder' : 'writer');
 
     try {
       const response = await fetch('/api/agent/prompt', {
@@ -247,7 +257,7 @@ export default function App() {
         body: JSON.stringify({
           prompt: text,
           language,
-          mode,
+          mode: isCodingPrompt ? 'agent' : 'chat',
           history: messages.slice(-10),
         }),
       });
@@ -273,15 +283,17 @@ export default function App() {
           role: 'agent',
           content: responseContent,
           timestamp: Date.now(),
+          isCodingTask: data.isCodingTask !== undefined ? data.isCodingTask : isCodingPrompt,
+          taskType: data.taskType || (isCodingPrompt ? 'coding' : 'chat'),
         };
 
         setMessages((prev) => [...prev, assistantMsg]);
         playSoftChimeSound();
 
-        // If backend returned an artifact (live code preview)
+        // If backend returned an artifact (live code preview), auto-open live preview drawer
         if (data.artifact) {
           setActiveArtifact(data.artifact);
-          // Do not auto-open preview modal automatically unless user toggles it
+          setIsPreviewOpen(true);
         }
 
         setAgentState('completed');
@@ -314,19 +326,13 @@ export default function App() {
 
   // Voice Recognition Handler
   const toggleVoiceRecording = () => {
-    if (isRecordingVoice) {
+    if (siriVisualActive) {
       voiceAgent.stopListening();
       setIsRecordingVoice(false);
       setSiriVisualActive(false);
     } else {
       setIsRecordingVoice(true);
       setSiriVisualActive(true);
-      voiceAgent.startListening(
-        language,
-        (transcript: string) => {
-          setInputText(transcript);
-        }
-      );
     }
   };
 
@@ -342,50 +348,57 @@ export default function App() {
       <header className="relative z-30 py-3 px-4 sm:px-6 min-h-[68px] border-b border-white/80 bg-white/55 backdrop-blur-3xl flex items-center justify-between shadow-xs transition-all">
         {/* Left: Active Project/Workspace Badge */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white/80 border border-white/95 shadow-xs text-xs font-mono font-bold text-slate-700">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white/70 border border-white/90 shadow-2xs text-xs font-sans font-bold text-slate-700">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{projectInfo?.name || (isFa ? 'محیط توسعه: فعال' : 'Workspace: Active')}</span>
+            <span>{projectInfo?.name || (isFa ? 'محیط توسعه فعال' : 'Workspace Active')}</span>
           </div>
         </div>
 
         {/* Center: Hero Product Showcase Branding (کدگر / CODGAR) */}
-        <div className="flex flex-col items-center justify-center my-auto pt-1 pb-0.5 px-3 select-none group cursor-pointer">
+        <div className="flex items-center justify-center my-auto py-1.5 px-3 select-none group cursor-pointer">
           <div className="flex items-center gap-2.5 sm:gap-3 transition-all duration-300">
-            {/* Glossy 3D Blue Bot Agent Icon Badge (Pure White Inner, Blue Icon) */}
-            <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-500 p-[2px] shadow-[0_0_20px_rgba(56,189,248,0.35),0_6px_16px_rgba(37,99,235,0.18)] border-2 border-white/95 transition-transform duration-300 group-hover:scale-105 active:scale-95 shrink-0">
-              <div className="w-full h-full bg-white rounded-[11px] sm:rounded-[13px] flex items-center justify-center text-blue-600 shadow-inner relative overflow-hidden">
-                <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 drop-shadow-[0_2px_4px_rgba(37,99,235,0.3)]" />
+            {/* Glossy 3D Blue Bot Agent Icon Badge */}
+            <div
+              className={`relative w-8 h-8 sm:w-10 sm:h-10 rounded-2xl p-[2px] border-2 border-white/95 transition-all duration-700 group-hover:scale-105 active:scale-95 shrink-0 ${
+                isExecuting
+                  ? 'animate-codgar-thinking'
+                  : 'bg-gradient-to-tr from-blue-600 via-sky-400 to-blue-500 shadow-[0_0_20px_rgba(56,189,248,0.35),0_6px_16px_rgba(37,99,235,0.18)]'
+              }`}
+            >
+              <div className="w-full h-full bg-white rounded-[11px] sm:rounded-[13px] flex items-center justify-center shadow-inner relative overflow-hidden">
+                <Bot
+                  className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-700 ${
+                    isExecuting
+                      ? 'animate-codgar-icon'
+                      : 'text-blue-600 drop-shadow-[0_2px_4px_rgba(37,99,235,0.3)]'
+                  }`}
+                />
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white shadow-[0_0_6px_#10b981] animate-pulse" />
             </div>
 
             {/* 3D Ice-Blue & Crystal-Cyan High-Contrast Title (کدگر / CODGAR) */}
-            <div className="flex flex-col items-start leading-none pt-0.5">
-              <h1 className="font-sans font-black tracking-tight text-xl sm:text-2xl md:text-[28px] flex items-center leading-none">
-                {isFa ? (
-                  <span className="flex items-center tracking-normal">
-                    <span className="bg-gradient-to-r from-blue-800 via-blue-600 to-sky-400 bg-clip-text text-transparent font-black drop-shadow-[0_3px_8px_rgba(37,99,235,0.25)] drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
-                      کد
-                    </span>
-                    <span className="bg-gradient-to-r from-sky-400 via-cyan-500 to-indigo-600 bg-clip-text text-transparent font-black mr-0.5 drop-shadow-[0_3px_8px_rgba(6,182,212,0.25)] drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
-                      گر
-                    </span>
+            <h1 className="font-sans font-black tracking-tight text-2xl sm:text-3xl md:text-[30px] flex items-center leading-none mt-1">
+              {isFa ? (
+                <span className="flex items-center tracking-normal">
+                  <span className="bg-gradient-to-r from-blue-800 via-blue-600 to-sky-400 bg-clip-text text-transparent font-black drop-shadow-[0_3px_8px_rgba(37,99,235,0.25)] drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
+                    کد
                   </span>
-                ) : (
-                  <span className="flex items-center tracking-tight">
-                    <span className="bg-gradient-to-r from-blue-800 via-blue-600 to-sky-400 bg-clip-text text-transparent font-black drop-shadow-[0_3px_8px_rgba(37,99,235,0.25)] drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
-                      COD
-                    </span>
-                    <span className="bg-gradient-to-r from-sky-400 via-cyan-500 to-indigo-600 bg-clip-text text-transparent font-black drop-shadow-[0_3px_8px_rgba(6,182,212,0.25)] drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
-                      GAR
-                    </span>
+                  <span className="bg-gradient-to-r from-sky-400 via-cyan-500 to-indigo-600 bg-clip-text text-transparent font-black mr-0.5 drop-shadow-[0_3px_8px_rgba(6,182,212,0.25)] drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
+                    گر
                   </span>
-                )}
-              </h1>
-              <span className="text-[9px] sm:text-[10px] font-semibold text-blue-600/80 tracking-widest mt-0.5 flex items-center gap-1">
-                <span>{isFa ? 'دستیار خودکار برنامه‌نویسی' : 'Autonomous AI Architect'}</span>
-              </span>
-            </div>
+                </span>
+              ) : (
+                <span className="flex items-center tracking-tight">
+                  <span className="bg-gradient-to-r from-blue-800 via-blue-600 to-sky-400 bg-clip-text text-transparent font-black drop-shadow-[0_3px_8px_rgba(37,99,235,0.25)] drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
+                    COD
+                  </span>
+                  <span className="bg-gradient-to-r from-sky-400 via-cyan-500 to-indigo-600 bg-clip-text text-transparent font-black drop-shadow-[0_3px_8px_rgba(6,182,212,0.25)] drop-shadow-[0_1px_1px_rgba(255,255,255,0.9)]">
+                    GAR
+                  </span>
+                </span>
+              )}
+            </h1>
           </div>
         </div>
 
@@ -469,6 +482,7 @@ export default function App() {
                 messages={messages}
                 onSendMessage={handleSendMessage}
                 isExecuting={isExecuting}
+                taskIntent={activeTaskIntent}
                 onOpenCodeDrawer={() => setIsCodeDrawerOpen(true)}
                 onOpenSettings={() => setIsSettingsOpen(true)}
                 onOpenSiriVoice={toggleVoiceRecording}

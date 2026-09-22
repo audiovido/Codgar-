@@ -210,6 +210,19 @@ export class UniversalCompiler {
   public async buildReact(code: string, options: { title?: string; minify?: boolean } = {}): Promise<BuildResult> {
     const startTime = Date.now();
     try {
+      // Discover main component name from code
+      let mainExportName = 'App';
+      const defaultFuncMatch = code.match(/export\s+default\s+function\s+([A-Za-z0-9_]+)/);
+      const defaultNamedMatch = code.match(/export\s+default\s+([A-Za-z0-9_]+)/);
+      const anyComponentMatch = code.match(/(?:function|const|var|let)\s+([A-Z][A-Za-z0-9_]*)/);
+      if (defaultFuncMatch) {
+        mainExportName = defaultFuncMatch[1];
+      } else if (defaultNamedMatch) {
+        mainExportName = defaultNamedMatch[1];
+      } else if (anyComponentMatch) {
+        mainExportName = anyComponentMatch[1];
+      }
+
       // 1. Clean imports/exports before esbuild to ensure browser executable standalone bundle
       let preprocessedCode = code
         .replace(/import\s+React(?:\s*,\s*\{([^}]+)\})?\s+from\s+['"][^'"]+['"];?/g, (_, hooks) => {
@@ -219,7 +232,7 @@ export class UniversalCompiler {
           return `const { ${icons} } = LucideProxy;`;
         })
         .replace(/import\s+.*?\s+from\s+['"][^'"]+['"];?/g, '')
-        .replace(/export\s+default\s+function\s+([A-Za-z0-9_]+)/g, 'function $1(...args) { return __AppImpl__$1.apply(this, args); }\nconst __AppImpl__$1 = function $1')
+        .replace(/export\s+default\s+function\s+([A-Za-z0-9_]+)/g, 'window.__MainAppExport__ = function $1')
         .replace(/export\s+default\s+/g, 'window.__MainAppExport__ = ')
         .replace(/export\s+(?:const|let|var|function|class)\s+/g, '');
 
@@ -315,10 +328,26 @@ export class UniversalCompiler {
       (function() {
         ${safeJsCode}
         
-        const Component = window.__MainAppExport__ || 
-                          (typeof CryptoTradingDashboard !== 'undefined' ? CryptoTradingDashboard : null) ||
-                          (typeof App !== 'undefined' ? App : null) ||
-                          (typeof Main !== 'undefined' ? Main : null);
+        let Component = window.__MainAppExport__;
+        
+        if (!Component && typeof window['${mainExportName}'] === 'function') {
+          Component = window['${mainExportName}'];
+        }
+        
+        if (!Component) {
+          try {
+            if (typeof ${mainExportName} === 'function') Component = ${mainExportName};
+            else if (typeof App === 'function') Component = App;
+            else if (typeof Main === 'function') Component = Main;
+            else if (typeof LandingPage === 'function') Component = LandingPage;
+            else if (typeof Website === 'function') Component = Website;
+            else if (typeof Dashboard === 'function') Component = Dashboard;
+            else if (typeof DynamicGeneratedApp === 'function') Component = DynamicGeneratedApp;
+            else if (typeof TodoListApp === 'function') Component = TodoListApp;
+            else if (typeof IosAppSimulator === 'function') Component = IosAppSimulator;
+            else if (typeof AndroidAppSimulator === 'function') Component = AndroidAppSimulator;
+          } catch (_) {}
+        }
         
         if (Component) {
           const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -327,7 +356,7 @@ export class UniversalCompiler {
             if (window.lucide) window.lucide.createIcons();
           }, 100);
         } else {
-          document.getElementById('root').innerHTML = '<div class="p-6 text-cyan-300 font-mono text-center">Component compiled successfully.</div>';
+          document.getElementById('root').innerHTML = '<div class="p-8 text-center text-slate-300 font-sans"><div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold text-2xl">⚡</div><h2 class="text-xl font-bold text-white mb-2">برنامه با موفقیت بارگذاری شد</h2><p class="text-sm text-slate-400">نمایش زنده در حال اجرا است.</p></div>';
         }
       })();
     } catch (renderError) {

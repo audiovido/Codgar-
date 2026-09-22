@@ -124,7 +124,7 @@ export function Sidebar({
         : 'bg-indigo-50 text-indigo-700 border-indigo-200/70',
       iconContainerBg: 'bg-indigo-50/90 text-indigo-600 border-indigo-100',
       active: isQueueActive,
-      hasDot: isExecuting || queueCount > 0,
+      hasDot: false,
       dotColor: isExecuting ? 'bg-amber-500' : 'bg-indigo-500',
     },
     {
@@ -140,7 +140,7 @@ export function Sidebar({
         : 'bg-slate-100 text-slate-600 border-slate-200/60',
       iconContainerBg: 'bg-emerald-50/90 text-emerald-600 border-emerald-100',
       active: isChangesActive,
-      hasDot: changedCount > 0,
+      hasDot: false,
       dotColor: 'bg-emerald-500',
     },
     {
@@ -204,7 +204,7 @@ export function Sidebar({
         ? 'bg-emerald-500 text-white border-emerald-400 shadow-xs'
         : 'bg-emerald-50/90 text-emerald-600 border-emerald-100',
       active: isPreviewActive,
-      hasDot: isPreviewActive,
+      hasDot: false,
       dotColor: 'bg-emerald-500',
     },
     {
@@ -222,7 +222,7 @@ export function Sidebar({
         ? 'bg-amber-500 text-white border-amber-400 shadow-xs'
         : 'bg-amber-50/90 text-amber-600 border-amber-100',
       active: isFuelActive,
-      hasDot: isFuelActive,
+      hasDot: false,
       dotColor: 'bg-amber-500',
     },
   ];

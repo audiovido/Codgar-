@@ -95,6 +95,8 @@ export interface Message {
   timestamp: number;
   mode?: AgentMode;
   state?: AgentState;
+  isCodingTask?: boolean;
+  taskType?: 'chat' | 'coding';
   toolCalls?: ToolCall[];
   plan?: TaskPlan;
   findings?: CodeReviewFinding[];

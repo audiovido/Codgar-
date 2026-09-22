@@ -5,10 +5,8 @@ import {
   MicOff,
   Send,
   X,
-  Bot,
   Type,
   Check,
-  Volume2,
 } from 'lucide-react';
 
 interface Props {
@@ -103,109 +101,91 @@ export function SiriLiveSpeakerOverlay({
     }
   };
 
+  // Real voice power calculation (scale dynamically with microphone amplitude)
+  const powerLevel = voiceState.isListening ? Math.max(0.1, voiceState.audioLevel) : 0;
+  const pulseScale = 1 + Math.min(0.5, powerLevel * 0.8);
+  const glowOpacity = Math.min(0.9, 0.3 + powerLevel * 0.7);
+
   return (
-    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[94%] sm:w-[480px] rounded-[28px] ice-glass-card bg-white/85 backdrop-blur-3xl border border-white/95 shadow-[0_25px_70px_rgba(37,99,235,0.25),inset_0_1px_2px_rgba(255,255,255,0.95)] p-5 select-none dir-auto">
-      {/* Top Bar: Codgar Brand Icon with Listening Ears Animation & Live Status */}
-      <div className="flex items-center justify-between mb-3 border-b border-blue-200/60 pb-3">
-        <div className="flex items-center gap-3">
-          {/* Codgar Signature Bot Icon with Animated Listening Ears */}
-          <div className="relative flex items-center justify-center py-1 px-3">
-            {/* Left Listening Ear Soundwaves */}
-            <div className="flex items-center gap-0.5 mr-1.5 h-5">
-              <span className={`w-1 rounded-full bg-cyan-400 transition-all duration-300 ${voiceState.isListening ? 'h-3.5 animate-pulse' : 'h-1.5 opacity-40'}`} />
-              <span className={`w-1 rounded-full bg-blue-500 transition-all duration-300 ${voiceState.isListening ? 'h-5 animate-bounce' : 'h-2 opacity-50'}`} style={{ animationDelay: '150ms' }} />
-            </div>
-
-            {/* Main Robot Head with Color Breathing Pulse */}
-            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-sky-400 to-indigo-600 p-[1.5px] shadow-md flex items-center justify-center transition-all duration-500">
-              <div className="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-cyan-300">
-                <Bot className={`w-5 h-5 transition-all duration-700 ${voiceState.isListening ? 'text-cyan-300 animate-pulse scale-105' : 'text-blue-400'}`} />
-              </div>
-              {/* Outer Glowing Liquid Aura */}
-              {voiceState.isListening && (
-                <span className="absolute -inset-1.5 rounded-2xl border border-cyan-400/50 animate-ping opacity-60 pointer-events-none" />
-              )}
-            </div>
-
-            {/* Right Listening Ear Soundwaves */}
-            <div className="flex items-center gap-0.5 ml-1.5 h-5">
-              <span className={`w-1 rounded-full bg-blue-500 transition-all duration-300 ${voiceState.isListening ? 'h-5 animate-bounce' : 'h-2 opacity-50'}`} style={{ animationDelay: '150ms' }} />
-              <span className={`w-1 rounded-full bg-cyan-400 transition-all duration-300 ${voiceState.isListening ? 'h-3.5 animate-pulse' : 'h-1.5 opacity-40'}`} />
+    <div
+      id="compact-voice-overlay"
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[92%] sm:w-[360px] rounded-[24px] bg-gradient-to-b from-white/95 via-sky-50/80 to-blue-50/90 backdrop-blur-2xl border border-white/95 shadow-[0_16px_40px_rgba(37,99,235,0.2),inset_0_1.5px_2px_rgba(255,255,255,1)] p-3.5 select-none dir-auto font-sans"
+    >
+      {/* Top Header: Responsive Live Mic Power Indicator & Close */}
+      <div className="flex items-center justify-between pb-2 mb-2 border-b border-blue-200/50">
+        <div className="flex items-center gap-2">
+          {/* Animated 3D Reactive Glowing Mic Circle */}
+          <div className="relative flex items-center justify-center">
+            {/* Dynamic Sound Aura (scales & glows with real voice power) */}
+            <span
+              className="absolute w-8 h-8 rounded-full bg-blue-500/30 blur-xs transition-transform duration-75"
+              style={{
+                transform: `scale(${pulseScale})`,
+                opacity: glowOpacity,
+              }}
+            />
+            {/* Inner Glowing Icon */}
+            <div
+              className={`relative w-7 h-7 rounded-full flex items-center justify-center transition-all duration-75 shadow-xs ${
+                voiceState.isListening
+                  ? 'bg-gradient-to-tr from-blue-600 via-sky-500 to-indigo-600 text-white'
+                  : 'bg-slate-100 text-slate-400'
+              }`}
+            >
+              <Mic className="w-3.5 h-3.5 animate-none" />
             </div>
           </div>
 
-          <div>
-            <h3 className="text-xs font-bold text-slate-900 tracking-wide flex items-center gap-1.5">
-              <span>{isFa ? 'دستیار صوتی و ضبط ویس کدگر' : 'Codgar Voice Assistant'}</span>
-              <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-blue-100/90 border border-blue-200 text-blue-900 font-bold">
-                {isFa ? 'تشخیص فارسی' : 'EN'}
-              </span>
-            </h3>
-            <p className="text-[11px] text-slate-600 flex items-center gap-1.5 mt-0.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>
-                {isFa
-                  ? 'میکروفون فعال است // در حال دریافت ویس...'
-                  : 'Microphone Active // Listening...'}
-              </span>
-            </p>
+          {/* Voice Amplitude Visualizer Bars */}
+          <div className="flex items-center gap-1 h-3.5">
+            {[0.4, 0.8, 1.2, 0.9, 0.5].map((factor, idx) => {
+              const barHeight = Math.max(
+                3,
+                Math.min(14, voiceState.isListening ? 3 + powerLevel * 14 * factor : 3)
+              );
+              return (
+                <span
+                  key={idx}
+                  className="w-1 rounded-full bg-gradient-to-t from-blue-600 to-sky-400 transition-all duration-75"
+                  style={{ height: `${barHeight}px` }}
+                />
+              );
+            })}
           </div>
+
+          <span className="text-[11px] font-sans font-bold text-blue-950 mr-1">
+            {isFa ? 'در حال شنیدن...' : 'Listening...'}
+          </span>
         </div>
 
-        {/* Close Button */}
         <button
           onClick={onClose}
-          className="p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition cursor-pointer border border-slate-200"
+          className="p-1 rounded-full bg-white/80 hover:bg-white text-slate-500 hover:text-slate-800 border border-white shadow-2xs transition-all duration-100 active:scale-95 cursor-pointer"
           title={isFa ? 'بستن' : 'Close'}
         >
-          <X className="w-4 h-4" />
+          <X className="w-3.5 h-3.5" />
         </button>
       </div>
 
-      {/* Lightweight Audio Wave Indicator Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-blue-50/90 border border-blue-200/80 my-2">
-        <div className="flex items-center gap-2">
-          <Volume2 className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
-          <span className="text-[10px] font-mono text-blue-900 font-semibold">
-            {isFa ? 'شدت صدا:' : 'Audio:'} {Math.round(voiceState.audioLevel * 100)}%
-          </span>
-        </div>
-        {/* Lightweight Audio Wave Bars */}
-        <div className="flex items-center gap-1 h-3">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((bar) => {
-            const heightMultiplier = (bar % 4) + 1;
-            const barHeight = Math.max(3, Math.min(14, voiceState.audioLevel * 20 * heightMultiplier));
-            return (
-              <span
-                key={bar}
-                className="w-1 rounded-full bg-gradient-to-t from-blue-600 to-sky-400 transition-all duration-75"
-                style={{ height: `${barHeight}px` }}
-              />
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Live Transcribed Speech Output Box */}
+      {/* Voice Transcript Display Box (Zero delay, high-contrast) */}
       <div
-        className="w-full my-3 p-3 rounded-2xl bg-slate-50 border border-blue-200/90 text-center min-h-[60px] max-h-[120px] overflow-y-auto flex items-center justify-center shadow-inner"
+        className="w-full my-1.5 px-3.5 py-2.5 rounded-xl bg-white/85 border border-blue-100/90 text-center min-h-[46px] max-h-[80px] overflow-y-auto flex items-center justify-center shadow-[inset_0_1.5px_3px_rgba(37,99,235,0.04)]"
         dir={isFa ? 'rtl' : 'ltr'}
       >
         {currentDisplay ? (
-          <p className="text-xs sm:text-sm font-semibold text-slate-900 leading-relaxed break-words font-sans">
+          <p className="text-xs sm:text-[13px] font-semibold text-slate-800 leading-relaxed break-words font-sans">
             « {currentDisplay} »
           </p>
         ) : (
-          <p className="text-xs text-slate-500 font-sans animate-pulse font-medium">
-            {isFa
-              ? 'صحبت کنید... ویس شما به متن فارسی تبدیل می‌شود'
-              : 'Speak now... Your voice will be transcribed to text'}
+          <p className="text-xs text-slate-400 font-sans font-normal">
+            {isFa ? 'صحبت کنید... ویس بلادرنگ تایپ می‌شود' : 'Speak clearly into the microphone...'}
           </p>
         )}
       </div>
 
-      {/* Action Buttons Row */}
-      <div className="flex items-center justify-between gap-2 pt-2 border-t border-blue-100">
+      {/* Action Footer: Unified Grid */}
+      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-blue-100/60 items-center">
+        {/* Button 1: Toggle / Pause Recording */}
         <button
           onClick={() => {
             if (voiceState.isListening) {
@@ -220,56 +200,54 @@ export function SiriLiveSpeakerOverlay({
               );
             }
           }}
-          className={`px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer shrink-0 border ${
+          className={`h-8.5 px-2 rounded-xl text-xs font-sans font-bold transition-all duration-100 flex items-center justify-center gap-1.5 cursor-pointer border active:scale-95 whitespace-nowrap ${
             voiceState.isListening
-              ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-              : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+              ? 'bg-gradient-to-b from-rose-50 to-rose-100/80 text-rose-600 border-rose-200/90 shadow-2xs hover:brightness-95'
+              : 'bg-gradient-to-b from-white to-blue-50/80 text-slate-700 border-blue-100/80 shadow-2xs hover:bg-white'
           }`}
         >
           {voiceState.isListening ? (
             <>
-              <MicOff className="w-3.5 h-3.5 text-rose-600" />
+              <MicOff className="w-3 h-3 text-rose-500 shrink-0" />
               <span>{isFa ? 'توقف' : 'Stop'}</span>
             </>
           ) : (
             <>
-              <Mic className="w-3.5 h-3.5 text-blue-600" />
-              <span>{isFa ? 'شروع دوباره' : 'Record'}</span>
+              <Mic className="w-3 h-3 text-blue-600 shrink-0" />
+              <span>{isFa ? 'شروع' : 'Start'}</span>
             </>
           )}
         </button>
 
-        <div className="flex items-center gap-2">
-          {/* Button: Insert into "Type Your Message" Box */}
-          <button
-            onClick={handleInsert}
-            disabled={!currentDisplay.trim()}
-            className="px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200/90 text-blue-900 font-bold text-xs flex items-center gap-1.5 disabled:opacity-40 transition cursor-pointer active:scale-95 shadow-2xs"
-            title={isFa ? 'قرار دادن در کادر پیام' : 'Insert into message box'}
-          >
-            {copiedSuccess ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{isFa ? 'درج شد' : 'Inserted'}</span>
-              </>
-            ) : (
-              <>
-                <Type className="w-3.5 h-3.5 text-blue-600" />
-                <span>{isFa ? 'درج در کادر تایپ' : 'Insert to box'}</span>
-              </>
-            )}
-          </button>
+        {/* Button 2: Insert into Chat Box */}
+        <button
+          onClick={handleInsert}
+          disabled={!currentDisplay.trim()}
+          className="h-8.5 px-2 rounded-xl bg-gradient-to-b from-white to-sky-50/90 hover:from-white hover:to-sky-100/90 border border-sky-200/80 text-blue-950 font-sans font-bold text-xs flex items-center justify-center gap-1.5 disabled:opacity-40 transition-all duration-100 cursor-pointer shadow-2xs active:scale-95 whitespace-nowrap"
+          title={isFa ? 'درج در کادر تایپ' : 'Insert into chat input'}
+        >
+          {copiedSuccess ? (
+            <>
+              <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+              <span>{isFa ? 'درج شد' : 'Inserted'}</span>
+            </>
+          ) : (
+            <>
+              <Type className="w-3 h-3 text-blue-600 shrink-0" />
+              <span>{isFa ? 'درج در متن' : 'Insert'}</span>
+            </>
+          )}
+        </button>
 
-          {/* Button: Send Directly to Codgar */}
-          <button
-            onClick={handleSendDirectly}
-            disabled={!currentDisplay.trim()}
-            className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md hover:brightness-105 disabled:opacity-40 transition cursor-pointer active:scale-95"
-          >
-            <span>{isFa ? 'ارسال به کدگر' : 'Send'}</span>
-            <Send className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        {/* Button 3: Send Directly to Codgar */}
+        <button
+          onClick={handleSendDirectly}
+          disabled={!currentDisplay.trim()}
+          className="h-8.5 px-2 rounded-xl bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-sans font-bold text-xs flex items-center justify-center gap-1.5 shadow-[0_4px_12px_rgba(37,99,235,0.25)] disabled:opacity-40 transition-all duration-100 cursor-pointer active:scale-95 whitespace-nowrap"
+        >
+          <span>{isFa ? 'ارسال' : 'Send'}</span>
+          <Send className="w-3 h-3 shrink-0" />
+        </button>
       </div>
     </div>
   );

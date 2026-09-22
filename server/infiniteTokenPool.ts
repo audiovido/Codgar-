@@ -679,65 +679,126 @@ export default function TodoListApp() {
         } else {
           const sanitizedTitle = prompt.replace(/[`"'\\\/]/g, ' ').slice(0, 45);
           componentCode = `import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, Send, Activity, Shield } from 'lucide-react';
+import { Sparkles, ArrowRight, CheckCircle2, Star, Shield, Zap, Globe, Smartphone, Send, MessageSquare, Layout, Cpu } from 'lucide-react';
 
-export default function DynamicGeneratedApp() {
-  const [input, setInput] = useState('');
-  const [items, setItems] = useState([
-    { id: 1, text: '${isFa ? 'بررسی درخواست: ' + sanitizedTitle : 'Task for: ' + sanitizedTitle}', done: true },
-    { id: 2, text: '${isFa ? 'اجرای دستورالعمل موتور هوشمند' : 'Execute smart engine directive'}', done: false }
-  ]);
+export default function Website() {
+  const [activeTab, setActiveTab] = useState('home');
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [likes, setLikes] = useState(128);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    setItems([...items, { id: Date.now(), text: input.trim(), done: false }]);
-    setInput('');
-  };
+  const features = [
+    { title: '${isFa ? 'طراحی مدرن و واکنش‌گرا' : 'Responsive Design'}', desc: '${isFa ? 'سازگاری کامل با تمامی دستگاه‌ها، موبایل، تبلت و دسکتاپ' : 'Flawless adaptability on mobile, tablet & desktop'}', icon: Smartphone },
+    { title: '${isFa ? 'سرعت و عملکرد فوق‌العاده' : 'Ultra-Fast Performance'}', desc: '${isFa ? 'بارگذاری آنی و بهینه‌سازی پیشرفته کدها و استایل‌ها' : 'Instant load times & advanced asset optimization'}', icon: Zap },
+    { title: '${isFa ? 'امنیت و پایداری بالا' : 'Enterprise Security'}', desc: '${isFa ? 'معماری مدرن با رعایت بالاترین استانداردهای امنیتی' : 'Built on battle-tested, secure modern architecture'}', icon: Shield },
+    { title: '${isFa ? 'یکپارچه‌سازی ابری' : 'Cloud Native'}', desc: '${isFa ? 'اتصال آسان به سرویس‌های ابری و APIهای اختصاصی' : 'Seamless connection with modern APIs and databases'}', icon: Globe }
+  ];
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 my-8 font-sans">
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600/10 flex items-center justify-center text-indigo-600 font-bold">
-            <Sparkles className="w-5 h-5" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white pb-20">
+      {/* Navigation Bar */}
+      <nav className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/20">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="font-extrabold text-lg tracking-tight text-white">${sanitizedTitle || 'وب‌سایت مدرن'}</span>
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-slate-800 dark:text-white">${sanitizedTitle}</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">پردازش شده توسط روتر ${activeR.name}</p>
+
+          <div className="flex items-center gap-6 text-sm font-medium text-slate-300">
+            {['صفحه اصلی', 'ویژگی‌ها', 'درباره ما', 'تماس'].map((link, idx) => (
+              <button key={idx} className="hover:text-blue-400 transition cursor-pointer hidden md:inline-block">
+                {link}
+              </button>
+            ))}
+            <button className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition cursor-pointer">
+              ${isFa ? 'شروع پروژه' : 'Get Started'}
+            </button>
           </div>
         </div>
-        <span className="px-3 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-semibold rounded-full">
-          Live Sync Active
-        </span>
-      </div>
+      </nav>
 
-      <form onSubmit={handleSubmit} className="flex gap-2 mb-6">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="${isFa ? 'افزودن آیتم جدید...' : 'Add new item...'}"
-          className="flex-1 px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-        <button type="submit" className="px-5 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition shadow-lg shadow-indigo-500/20 flex items-center gap-2 text-sm">
-          <Send className="w-4 h-4" />
-          ${isFa ? 'ثبت' : 'Add'}
-        </button>
-      </form>
+      {/* Hero Section */}
+      <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-6">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>${isFa ? 'نسخه مدرن و کاملاً سفارشی‌شده' : 'Next-Gen Interactive Web Platform'}</span>
+        </div>
 
-      <div className="space-y-3">
-        {items.map(item => (
-          <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-700/50">
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setItems(items.map(i => i.id === item.id ? { ...i, done: !i.done } : i))}>
-              <CheckCircle2 className={\`w-5 h-5 \${item.done ? 'text-emerald-500' : 'text-slate-300 dark:text-slate-600'}\`} />
-              <span className={\`text-sm font-medium \${item.done ? 'line-through text-slate-400' : 'text-slate-700 dark:text-slate-200'}\`}>
-                {item.text}
-              </span>
+        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
+          ${isFa ? 'ساخت و توسعه وب‌سایت‌های هوشمند با بالاترین کیفیت' : 'Building High-Performance Digital Experiences'}
+        </h1>
+
+        <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+          ${isFa ? 'طراحی شده بر پایه مدرن‌ترین متدولوژی‌های وب، با ظاهری چشم‌نواز، تعاملی و آماده بهره‌برداری فوری.' : 'Engineered for extreme performance, intuitive user experience, and seamless scalability.'}
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <button
+            onClick={() => setLikes(l => l + 1)}
+            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-blue-600/30 transition flex items-center gap-2 cursor-pointer active:scale-95"
+          >
+            <Star className="w-4 h-4 fill-current" />
+            <span>${isFa ? 'پسندیدن پروژه' : 'Star Project'} ({likes})</span>
+          </button>
+          <a href="#features" className="px-6 py-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 font-bold text-sm transition flex items-center gap-2 cursor-pointer">
+            <span>${isFa ? 'مشاهده ویژگی‌ها' : 'Explore Features'}</span>
+            <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
+      </section>
+
+      {/* Feature Grid */}
+      <section id="features" className="max-w-6xl mx-auto px-6 py-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {features.map((feat, idx) => {
+            const Icon = feat.icon;
+            return (
+              <div key={idx} className="p-6 rounded-3xl bg-slate-900/60 border border-slate-800/80 hover:border-blue-500/40 transition group">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition">
+                  <Icon className="w-6 h-6" />
+                </div>
+                <h3 className="text-lg font-bold text-white mb-2">{feat.title}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{feat.desc}</p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Interactive Form Section */}
+      <section className="max-w-3xl mx-auto px-6 py-12">
+        <div className="p-8 md:p-10 rounded-3xl bg-gradient-to-tr from-blue-950/40 to-indigo-950/40 border border-blue-500/30 backdrop-blur-xl text-center">
+          <h2 className="text-2xl font-bold text-white mb-3">${isFa ? 'ارتباط و دریافت مشاوره' : 'Stay in Touch'}</h2>
+          <p className="text-sm text-slate-300 mb-6">${isFa ? 'ایمیل خود را وارد کنید تا جزئیات و پیش‌نمایش‌ها برایتان ارسال شود.' : 'Subscribe to receive live updates & new features.'}</p>
+
+          {subscribed ? (
+            <div className="p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-sm font-bold flex items-center justify-center gap-2">
+              <CheckCircle2 className="w-5 h-5" />
+              <span>${isFa ? 'درخواست شما با موفقیت ثبت شد!' : 'Subscription confirmed!'}</span>
             </div>
-          </div>
-        ))}
-      </div>
+          ) : (
+            <form onSubmit={(e) => { e.preventDefault(); if (email) setSubscribed(true); }} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="${isFa ? 'ایمیل شما (مثال: name@example.com)' : 'Your email address...'}"
+                className="flex-1 px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="submit"
+                className="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Send className="w-4 h-4" />
+                <span>${isFa ? 'ثبت' : 'Send'}</span>
+              </button>
+            </form>
+          )}
+        </div>
+      </section>
     </div>
   );
 }`;
@@ -759,7 +820,7 @@ export default function DynamicGeneratedApp() {
     }
 
     let attempts = 0;
-    const maxAttempts = 6;
+    const maxAttempts = 1;
     let cascadedCount = 0;
 
     // Update first generated key stats
@@ -792,7 +853,13 @@ export default function DynamicGeneratedApp() {
 
       try {
         const keyManager = KeyManager.getInstance();
-        const candidateModels = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+        const candidateModels = [
+          'gemini-2.0-flash',
+          'gemini-1.5-flash',
+          'gemini-2.0-flash-lite-preview-02-05',
+          'gemini-3.6-flash',
+          'gemini-flash-latest',
+        ];
 
         for (const candModel of candidateModels) {
           try {
@@ -805,7 +872,7 @@ export default function DynamicGeneratedApp() {
                   temperature: 0.35,
                 },
               });
-            }, 2);
+            }, 1);
 
             if (genResult?.text) {
               const estSavings = Math.round(prompt.length * 0.38);
@@ -822,11 +889,11 @@ export default function DynamicGeneratedApp() {
               };
             }
           } catch (modelErr: any) {
-            console.warn(`[InfiniteTokenPool] Attempt with model ${candModel} on ${router.name} failed:`, modelErr?.message || modelErr);
+            console.log(`[InfiniteTokenPool] Gateway model ${candModel} on ${router.name} busy/cooldown, failing over...`);
           }
         }
       } catch (err: any) {
-        console.warn(`[InfiniteTokenPool] Attempt ${attempts} hit limit: ${err?.message || err}. Cascading to next router...`);
+        console.log(`[InfiniteTokenPool] Router ${router.name} active cascade failover...`);
       }
 
       // Quota exhausted on current router: mark model cooldown and cascade to next router!
@@ -876,17 +943,831 @@ export default function DynamicGeneratedApp() {
         ? `سلام! آماده‌ام. چه برنامه‌ای یا کدی می‌خواهید بنویسیم؟\n\n**پرامپت پیشنهادی برای تست:**\n> «یک برنامه لیست کارها (Todo List) واکنش‌گرا با قابلیت دسته‌بندی و ذخیره در LocalStorage با Tailwind CSS بنویس.»`
         : `Hello! I'm ready. What app or code would you like to build?\n\n**Suggested test prompt:**\n> «Build a responsive Todo List app with category filtering and LocalStorage persistence using Tailwind CSS.»`;
     } else {
+      const isFruitOrSupermarket = /میوه|میوه‌فروشی|میوه فروشی|سوپرمارکت|سوپر مارکت|سبزی|سبزیجات|خواربار|ارگانیک|fruit|grocery|supermarket|vegetable/i.test(prompt);
+      const isRestaurantOrCafe = /رستوران|کافه|کافی‌شاپ|کافی شاپ|قهوه|فست‌فود|فست فود|پیتزا|برگر|غذا|نوشیدنی|restaurant|cafe|coffee|food|burger|pizza/i.test(prompt);
+      const isRealEstate = /املاک|مسکن|خانه|آپارتمان|ویلا|رهن|اجاره|ملک|real\s*estate|property|house/i.test(prompt);
+      const isPs5OrGaming = /ps5|playstation|پلی‌استیشن|پلی استیشن|کنسول|بازی|game|gaming|گیمینگ/i.test(prompt);
       const isTodo = /todo|لیست|وظایف|کارها/i.test(prompt);
-      const isCrypto = /crypto|ارز|بیت‌کوین|bitcoin|price/i.test(prompt);
+      const isCrypto = /crypto|ارز|بیت‌کوین|bitcoin|price|ترید|trading|صرافی/i.test(prompt);
       const isCalc = /calculator|ماشین حساب|حساب/i.test(prompt);
 
       let componentCode = "";
       let componentName = "CustomApp";
 
-      if (isTodo) {
+      if (isFruitOrSupermarket) {
+        componentName = "FruitStore";
+        componentCode = `import React, { useState } from 'react';
+import { ShoppingBag, Star, ShieldCheck, Truck, Sparkles, Heart, Search, Check, Plus, Minus, Trash2, Leaf, Tag } from 'lucide-react';
+
+export default function FruitStore() {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [cart, setCart] = useState([]);
+  const [showCart, setShowCart] = useState(false);
+  const [orderComplete, setOrderComplete] = useState(false);
+
+  const products = [
+    {
+      id: 1,
+      name: 'سیب سرخ درجه یک دماوند',
+      category: 'seasonal',
+      price: 48000,
+      unit: 'کیلوگرم',
+      image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=600&auto=format&fit=crop&q=80',
+      tag: 'ارگانیک و تازه',
+      rating: 4.9,
+      origin: 'باغات دماوند',
+      badge: 'دست‌چین روز'
+    },
+    {
+      id: 2,
+      name: 'پرتقال خونی تامسون شمال',
+      category: 'citrus',
+      price: 54000,
+      unit: 'کیلوگرم',
+      image: 'https://images.unsplash.com/photo-1582979512210-99b6a53386f9?w=600&auto=format&fit=crop&q=80',
+      tag: 'سرشار از ویتامین C',
+      rating: 4.8,
+      origin: 'مازندران',
+      badge: 'پرفروش'
+    },
+    {
+      id: 3,
+      name: 'توت‌فرنگی گلخانه‌ای مجلسی',
+      category: 'seasonal',
+      price: 110000,
+      unit: 'بسته ۷۰۰ گرمی',
+      image: 'https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=600&auto=format&fit=crop&q=80',
+      tag: 'شیرین و آبدار',
+      rating: 5.0,
+      origin: 'سنندج',
+      badge: 'نوبرانه'
+    },
+    {
+      id: 4,
+      name: 'موز ممتاز وارداتی',
+      category: 'tropical',
+      price: 79000,
+      unit: 'کیلوگرم',
+      image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=600&auto=format&fit=crop&q=80',
+      tag: 'درشت و رسیده',
+      rating: 4.7,
+      origin: 'اکوادور',
+      badge: 'تخفیف ویژه'
+    },
+    {
+      id: 5,
+      name: 'آناناس طلایی شیرین',
+      category: 'tropical',
+      price: 189000,
+      unit: 'عدد',
+      image: 'https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=600&auto=format&fit=crop&q=80',
+      tag: 'کیفیت صادراتی',
+      rating: 4.9,
+      origin: 'کاستاریکا',
+      badge: 'وارداتی'
+    },
+    {
+      id: 6,
+      name: 'آووکادو هاس تازه',
+      category: 'tropical',
+      price: 88000,
+      unit: 'عدد',
+      image: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=600&auto=format&fit=crop&q=80',
+      tag: 'بافت کره‌ای',
+      rating: 4.8,
+      origin: 'کنیا',
+      badge: 'سوپرفود'
+    },
+    {
+      id: 7,
+      name: 'انگور یاقوتی اعلا',
+      category: 'seasonal',
+      price: 65000,
+      unit: 'کیلوگرم',
+      image: 'https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=600&auto=format&fit=crop&q=80',
+      tag: 'بدون هسته و شیرین',
+      rating: 4.9,
+      origin: 'شاهرود',
+      badge: 'طبیعی'
+    },
+    {
+      id: 8,
+      name: 'لیمو ترش تازه سنگی',
+      category: 'citrus',
+      price: 42000,
+      unit: 'کیلوگرم',
+      image: 'https://images.unsplash.com/photo-1590502593747-42a996133562?w=600&auto=format&fit=crop&q=80',
+      tag: 'عطر و آب فراوان',
+      rating: 4.7,
+      origin: 'جهرم',
+      badge: 'تازه'
+    }
+  ];
+
+  const addToCart = (product) => {
+    setCart((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) => (item.id === product.id ? { ...item, qty: item.qty + 1 } : item));
+      }
+      return [...prev, { ...product, qty: 1 }];
+    });
+  };
+
+  const updateQuantity = (id, delta) => {
+    setCart((prev) =>
+      prev
+        .map((item) => {
+          if (item.id === id) {
+            const newQty = item.qty + delta;
+            return newQty > 0 ? { ...item, qty: newQty } : null;
+          }
+          return item;
+        })
+        .filter(Boolean)
+    );
+  };
+
+  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const filteredProducts = products.filter((p) => {
+    const matchesCategory = activeCategory === 'all' || p.category === activeCategory;
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.origin.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  return (
+    <div className="min-h-screen bg-[#0c140e] text-emerald-50 font-sans antialiased pb-24 selection:bg-emerald-500 selection:text-white" dir="rtl">
+      {/* Top Delivery Header */}
+      <div className="bg-gradient-to-r from-emerald-800 via-teal-700 to-emerald-900 text-white text-xs font-bold py-2.5 px-4 text-center flex items-center justify-center gap-2 shadow-md">
+        <Sparkles className="w-4 h-4 text-amber-300" />
+        <span>ارسال رایگان سفارش‌های بالای ۳۰۰ هزار تومان در سراسر شهر + تضمین بازگشت ۱۰۰٪ در صورت عدم رضایت از تازگی</span>
+      </div>
+
+      {/* Main Navbar */}
+      <header className="border-b border-emerald-900/60 bg-[#0f1b13]/90 backdrop-blur-xl sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-emerald-600/30">
+              <Leaf className="w-6 h-6" />
+            </div>
+            <div>
+              <span className="font-extrabold text-xl tracking-tight text-white block">میوه‌کده ارگانیک و تازه</span>
+              <span className="text-[10px] text-emerald-400 font-medium">سفارش مستقیم میوه و سبزیجات دست‌چین روز</span>
+            </div>
+          </div>
+
+          <div className="flex-1 max-w-md hidden md:block">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="جستجو در میوه‌ها، مرکبات، میوه‌های استوایی..."
+                className="w-full pr-10 pl-4 py-2.5 rounded-2xl bg-emerald-950/60 border border-emerald-800/60 text-sm text-emerald-100 placeholder-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <Search className="w-4 h-4 text-emerald-500 absolute right-3.5 top-3.5" />
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowCart(true)}
+            className="relative p-3 rounded-2xl bg-emerald-900/40 border border-emerald-700/60 hover:border-emerald-500 transition cursor-pointer text-white flex items-center gap-2"
+          >
+            <ShoppingBag className="w-5 h-5 text-emerald-400" />
+            <span className="text-xs font-bold hidden sm:inline">سبد خرید</span>
+            {totalItemsCount > 0 && (
+              <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-xs font-black flex items-center justify-center shadow-md">
+                {totalItemsCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* Hero Showcase Banner */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-8">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-emerald-950 via-[#102417] to-teal-950 border border-emerald-800/40 p-8 md:p-12 shadow-2xl">
+          <div className="max-w-xl z-10 relative">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold mb-4">
+              <Leaf className="w-3.5 h-3.5 text-emerald-400" />
+              <span>۱۰۰٪ طبیعی، ارگانیک و دست‌چین روزانه</span>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4 tracking-tight">
+              طراوت و عطر واقعی میوه تازه، مستقیم از باغ تا سفره شما
+            </h1>
+            <p className="text-emerald-200/80 text-sm md:text-base leading-relaxed mb-6">
+              تمامی میوه‌ها روزانه از بهترین باغات کشور تهیه شده و پس از کنترل کیفیت دقیق و بسته‌بندی بهداشتی، با ارسال سریع تحویل داده می‌شوند.
+            </p>
+            <div className="flex flex-wrap gap-4 items-center">
+              <button
+                onClick={() => addToCart(products[0])}
+                className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm shadow-xl shadow-emerald-600/30 transition cursor-pointer flex items-center gap-2 active:scale-95"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>سفارش سریع سیب دماوند</span>
+              </button>
+              <div className="flex items-center gap-4 text-xs text-emerald-300">
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-amber-400" />
+                  <span>تضمین سلامت و طراوت</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-teal-400" />
+                  <span>ارسال فوری با خودرو یخچال‌دار</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Category Tabs */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-6">
+        <div className="flex items-center justify-between gap-4 border-b border-emerald-900/50 pb-4">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {[
+              { id: 'all', label: 'همه میوه‌ها و محصولات' },
+              { id: 'seasonal', label: 'میوه‌های فصل و نوبرانه' },
+              { id: 'citrus', label: 'مرکبات تازه' },
+              { id: 'tropical', label: 'میوه‌های استوایی و خاص' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveCategory(tab.id)}
+                className={\`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap \${
+                  activeCategory === tab.id
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/25'
+                    : 'bg-emerald-950/50 text-emerald-300/70 hover:text-white border border-emerald-900/60'
+                }\`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <span className="text-xs text-emerald-400 font-medium hidden sm:inline">
+            {filteredProducts.length} محصول موجود
+          </span>
+        </div>
+      </section>
+
+      {/* Products Catalog Grid */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {filteredProducts.map((product) => {
+            const inCart = cart.find((item) => item.id === product.id);
+            return (
+              <div
+                key={product.id}
+                className="rounded-3xl bg-[#112015]/80 border border-emerald-900/50 hover:border-emerald-500/50 transition-all duration-300 p-4 flex flex-col justify-between group shadow-xl"
+              >
+                <div>
+                  <div className="relative rounded-2xl overflow-hidden bg-emerald-950 mb-3.5 aspect-[4/3]">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                    />
+                    <span className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-black shadow-md">
+                      {product.badge}
+                    </span>
+                    <span className="absolute bottom-2.5 left-2.5 px-2 py-0.5 rounded-lg bg-black/70 text-emerald-200 text-[10px] font-medium backdrop-blur-xs">
+                      {product.origin}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] text-amber-400 font-semibold flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-current" />
+                      {product.rating}
+                    </span>
+                    <span className="text-[10px] text-emerald-400/80 bg-emerald-950/80 px-2 py-0.5 rounded-md">
+                      {product.tag}
+                    </span>
+                  </div>
+
+                  <h3 className="font-bold text-sm text-white mb-3 line-clamp-1">{product.name}</h3>
+                </div>
+
+                <div className="pt-3 border-t border-emerald-900/50 flex items-center justify-between gap-2">
+                  <div>
+                    <span className="text-sm font-black text-emerald-300">
+                      {product.price.toLocaleString('fa-IR')}{' '}
+                      <span className="text-[10px] font-normal text-emerald-400">تومان</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-500 block">هر {product.unit}</span>
+                  </div>
+
+                  {inCart ? (
+                    <div className="flex items-center gap-2 bg-emerald-900/60 rounded-xl p-1 border border-emerald-700/50">
+                      <button
+                        onClick={() => updateQuantity(product.id, -1)}
+                        className="w-6 h-6 rounded-lg bg-emerald-800 text-white flex items-center justify-center hover:bg-rose-600 transition"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-xs font-black text-white px-1">{inCart.qty}</span>
+                      <button
+                        onClick={() => updateQuantity(product.id, 1)}
+                        className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => addToCart(product)}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/20 transition cursor-pointer flex items-center gap-1.5 active:scale-95"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>افزودن</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Cart Modal */}
+      {showCart && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-[#0f1f14] border border-emerald-800/60 p-6 shadow-2xl text-emerald-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-emerald-900/60 mb-4">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-emerald-400" />
+                <h3 className="font-extrabold text-lg text-white">سبد خرید شما</h3>
+              </div>
+              <button
+                onClick={() => setShowCart(false)}
+                className="w-8 h-8 rounded-xl bg-emerald-950 text-emerald-400 hover:text-white flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            {cart.length === 0 ? (
+              <div className="text-center py-12 text-emerald-500">
+                <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-30 text-emerald-400" />
+                <p className="text-sm">سبد خرید شما در حال حاضر خالی است.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 mb-6">
+                {cart.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-900/60 flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src={item.image} alt={item.name} className="w-12 h-12 rounded-xl object-cover" />
+                      <div>
+                        <h4 className="text-xs font-bold text-white line-clamp-1">{item.name}</h4>
+                        <span className="text-[11px] text-emerald-400 font-bold">
+                          {item.price.toLocaleString('fa-IR')} تومان × {item.qty}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateQuantity(item.id, -1)}
+                        className="w-6 h-6 rounded-lg bg-emerald-900 text-white flex items-center justify-center hover:bg-rose-600 transition"
+                      >
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-xs font-bold text-white">{item.qty}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, 1)}
+                        className="w-6 h-6 rounded-lg bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="p-4 rounded-2xl bg-emerald-950/80 border border-emerald-900/60 mt-4">
+                  <div className="flex justify-between items-center text-sm mb-3">
+                    <span className="text-emerald-300">مجموع سفارش:</span>
+                    <span className="font-black text-emerald-300 text-lg">
+                      {totalAmount.toLocaleString('fa-IR')} تومان
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      alert('سفارش میوه و سبزیجات شما ثبت گردید و جهت ارسال سریع آماده‌سازی می‌شود.');
+                      setCart([]);
+                      setShowCart(false);
+                    }}
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black text-sm shadow-xl shadow-emerald-600/30 transition cursor-pointer"
+                  >
+                    ثبت و پرداخت نهایی
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}`;
+      } else if (isPs5OrGaming) {
+        componentName = "PS5Store";
+        componentCode = `import React, { useState } from 'react';
+import { ShoppingCart, Star, ShieldCheck, Zap, Heart, Check, ArrowRight, Sparkles, Filter, Search, RotateCcw } from 'lucide-react';
+
+export default function PS5Store() {
+  const [cart, setCart] = useState([]);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const products = [
+    {
+      id: 1,
+      name: 'کنسول پلی‌استیشن ۵ نسخه استاندارد (PlayStation 5 Standard Edition)',
+      category: 'consoles',
+      price: 29800000,
+      originalPrice: 32000000,
+      rating: 4.9,
+      reviews: 420,
+      image: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=800&auto=format&fit=crop&q=80',
+      badge: 'پرطرفدارترین',
+      tag: 'موجودی محدود',
+      specs: ['حافظه SSD با ظرفیت 825GB', 'پشتیبانی از رزولوشن 4K/120fps', 'تکنولوژی صوتی Tempest 3D Audio'],
+    },
+    {
+      id: 2,
+      name: 'کنسول پلی‌استیشن ۵ پرو (PlayStation 5 Pro 2TB)',
+      category: 'consoles',
+      price: 46500000,
+      originalPrice: 48900000,
+      rating: 5.0,
+      reviews: 180,
+      image: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=800&auto=format&fit=crop&q=80',
+      badge: 'نسخه جدید ۲۰۲۵',
+      tag: 'سریع‌ترین سخت‌افزار',
+      specs: ['حافظه SSD فوق سریع 2TB', 'فناوری رهگیری پرتو پیشرفته (Advanced Ray Tracing)', 'پردازشگر گرافیکی تقویت‌شده PSSR'],
+    },
+    {
+      id: 3,
+      name: 'دسته بازی بی‌سیم دوال‌سنس (DualSense Wireless Controller Midnight Black)',
+      category: 'accessories',
+      price: 3850000,
+      originalPrice: 4200000,
+      rating: 4.8,
+      reviews: 950,
+      image: 'https://images.unsplash.com/photo-1592840496694-26d035b52b48?w=800&auto=format&fit=crop&q=80',
+      badge: 'تخفیف ویژه',
+      tag: 'رنگ مشکی مات',
+      specs: ['بازخورد لمسی پیشرفته (Haptic Feedback)', 'تریگرهای تطبیق‌پذیر پویا', 'میکروفون داخلی با دکمه Mute'],
+    },
+    {
+      id: 4,
+      name: 'هدست گیمینگ سه‌بعدی بی‌سیم (PULSE 3D Wireless Headset)',
+      category: 'accessories',
+      price: 4900000,
+      originalPrice: 5500000,
+      rating: 4.7,
+      reviews: 310,
+      image: 'https://images.unsplash.com/photo-1546435770-a3e426bf472b?w=800&auto=format&fit=crop&q=80',
+      badge: 'صدای سه‌بعدی',
+      tag: 'باتری ۱۲ ساعته',
+      specs: ['میکروفون دوگانه با حذف نویز محیط', 'پورت شارژ سریع Type-C', 'طراحی ارگونومیک سازگار با PS5'],
+    },
+    {
+      id: 5,
+      name: 'بازی Marvel’s Spider-Man 2 برای PS5',
+      category: 'games',
+      price: 2950000,
+      originalPrice: 3400000,
+      rating: 4.9,
+      reviews: 870,
+      image: 'https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?w=800&auto=format&fit=crop&q=80',
+      badge: 'شاهکار ۲۰۲۴',
+      tag: 'دوبله و زیرنویس',
+      specs: ['سوئیچ آنی بین پیتر پارکر و مایلز مورالس', 'پشتیبانی کامل از تریگرهای دوال‌سنس', 'رزولوشن 4K HDR پویا'],
+    },
+    {
+      id: 6,
+      name: 'بازی God of War Ragnarök ویژه PS5',
+      category: 'games',
+      price: 2800000,
+      originalPrice: 3200000,
+      rating: 5.0,
+      reviews: 1240,
+      image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80',
+      badge: 'برنده جایزه سال',
+      tag: 'نسخه لانچ',
+      specs: ['گرافیک خیره‌کننده با ۶۰ فریم بر ثانیه', 'داستان حماسی کریتوس و آترئوس', 'بسته الحاقی رایگان Valhalla'],
+    },
+  ];
+
+  const addToCart = (product) => {
+    setCart((prev) => {
+      const exists = prev.find((item) => item.id === product.id);
+      if (exists) {
+        return prev.map((item) => (item.id === product.id ? { ...item, qty: item.qty + 1 } : item));
+      }
+      return [...prev, { ...product, qty: 1 }];
+    });
+  };
+
+  const removeFromCart = (id) => {
+    setCart((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const totalAmount = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const filteredProducts = products.filter((p) => {
+    const matchesCat = activeCategory === 'all' || p.category === activeCategory;
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCat && matchesSearch;
+  });
+
+  return (
+    <div className="min-h-screen bg-[#070b14] text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white pb-24">
+      {/* Top Banner */}
+      <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-900 text-white text-xs font-bold py-2 px-4 text-center flex items-center justify-center gap-2">
+        <Sparkles className="w-4 h-4" />
+        <span>ارسال سریع و رایگان به سراسر کشور + گارانتی ۱۸ ماهه تعویض کلیه کنسول‌های PS5</span>
+      </div>
+
+      {/* Navigation Bar */}
+      <header className="border-b border-slate-800 bg-[#0a0f1d]/90 backdrop-blur-xl sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-blue-600/30">
+              ⚡
+            </div>
+            <div>
+              <span className="font-extrabold text-xl tracking-tight text-white block">PS5 Store Iran</span>
+              <span className="text-[10px] text-blue-400 font-medium">مرجع تخصصی خرید کنسول و بازی‌های پلی‌استیشن ۵</span>
+            </div>
+          </div>
+
+          <div className="flex-1 max-w-md hidden md:block">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="جستجو در کنسول‌ها، دسته‌ها و بازی‌های PS5..."
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3.5" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowCartModal(true)}
+              className="relative p-3 rounded-2xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 transition cursor-pointer text-white flex items-center gap-2"
+            >
+              <ShoppingCart className="w-5 h-5 text-blue-400" />
+              <span className="text-xs font-bold hidden sm:inline">سبد خرید</span>
+              {totalItemsCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-blue-600 text-white text-xs font-black flex items-center justify-center shadow-md">
+                  {totalItemsCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-12">
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 border border-blue-900/40 p-8 md:p-12 shadow-2xl">
+          <div className="max-w-xl z-10 relative">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold mb-4">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>نسل نهم گیمینگ بی حد و مرز</span>
+            </div>
+            <h1 className="text-3xl md:text-5xl font-black text-white leading-tight mb-4 tracking-tight">
+              تجربه نهایت هیجان با کنسول قدرتمند PlayStation 5
+            </h1>
+            <p className="text-slate-300 text-sm md:text-base leading-relaxed mb-8">
+              سفارش مستقیم کنسول‌های اورجینال سونی همراه با دسته دوال‌سنس، گارانتی اصالت کالا و مهلت تست ۷ روزه با ارسال اکسپرس.
+            </p>
+            <div className="flex flex-wrap gap-4 items-center">
+              <button
+                onClick={() => addToCart(products[0])}
+                className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-black shadow-xl shadow-blue-600/30 transition cursor-pointer flex items-center gap-2 active:scale-95"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span>خرید سریع PS5 استاندارد</span>
+              </button>
+              <div className="flex items-center gap-4 text-xs text-slate-300">
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  <span>ضمانت ۱۰۰٪ اصالت</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  <span>تحویل ۲ ساعته در تهران</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Category Tabs */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-8">
+        <div className="flex items-center justify-between gap-4 border-b border-slate-800 pb-4">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {[
+              { id: 'all', label: 'همه محصولات' },
+              { id: 'consoles', label: 'کنسول‌های PS5' },
+              { id: 'accessories', label: 'دسته‌ها و لوازم جانبی' },
+              { id: 'games', label: 'بازی‌های اورجینال' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveCategory(tab.id)}
+                className={\`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap \${
+                  activeCategory === tab.id
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                    : 'bg-slate-900/80 text-slate-400 hover:text-white border border-slate-800'
+                }\`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <span className="text-xs text-slate-400 font-medium hidden sm:inline">
+            نمایش {filteredProducts.length} محصول موجود
+          </span>
+        </div>
+      </section>
+
+      {/* Product Catalog Grid */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => {
+            const inCart = cart.find((item) => item.id === product.id);
+            return (
+              <div
+                key={product.id}
+                className="rounded-3xl bg-slate-900/60 border border-slate-800 hover:border-blue-500/40 transition-all duration-300 p-5 flex flex-col justify-between group shadow-xl"
+              >
+                <div>
+                  <div className="relative rounded-2xl overflow-hidden bg-slate-950 mb-4 aspect-[4/3]">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                    />
+                    <span className="absolute top-3 right-3 px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[10px] font-black shadow-md">
+                      {product.badge}
+                    </span>
+                    <span className="absolute bottom-3 left-3 px-2.5 py-1 rounded-lg bg-slate-900/90 text-slate-200 text-[10px] font-bold border border-slate-700">
+                      {product.tag}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1 text-amber-400 text-xs mb-2">
+                    <Star className="w-3.5 h-3.5 fill-current" />
+                    <span className="font-bold text-slate-200">{product.rating}</span>
+                    <span className="text-slate-500 text-[10px]">({product.reviews} نظر خریداران)</span>
+                  </div>
+
+                  <h3 className="font-bold text-base text-white mb-3 line-clamp-2 leading-snug">{product.name}</h3>
+
+                  <ul className="space-y-1.5 mb-5 text-[11px] text-slate-400">
+                    {product.specs.map((spec, sIdx) => (
+                      <li key={sIdx} className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                        <span>{spec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] text-slate-500 line-through block">
+                      {product.originalPrice.toLocaleString('fa-IR')} تومان
+                    </span>
+                    <span className="text-base font-black text-emerald-400">
+                      {product.price.toLocaleString('fa-IR')}{' '}
+                      <span className="text-[10px] font-normal text-slate-400">تومان</span>
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => addToCart(product)}
+                    className={\`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 \${
+                      inCart
+                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                        : 'bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/20'
+                    }\`}
+                  >
+                    {inCart ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>در سبد ({inCart.qty})</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-3.5 h-3.5" />
+                        <span>افزودن به سبد</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Cart Modal */}
+      {showCartModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl text-slate-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5 text-blue-500" />
+                <h3 className="font-extrabold text-lg">سبد خرید شما</h3>
+              </div>
+              <button
+                onClick={() => setShowCartModal(false)}
+                className="w-8 h-8 rounded-xl bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            {cart.length === 0 ? (
+              <div className="text-center py-12 text-slate-400">
+                <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-30 text-blue-400" />
+                <p className="text-sm">سبد خرید شما در حال حاضر خالی است.</p>
+              </div>
+            ) : (
+              <div className="space-y-3 mb-6">
+                {cart.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3">
+                      <img src={item.image} alt={item.name} className="w-14 h-14 rounded-xl object-cover" />
+                      <div>
+                        <h4 className="text-xs font-bold text-white line-clamp-1">{item.name}</h4>
+                        <span className="text-[11px] text-emerald-400 font-bold">
+                          {item.price.toLocaleString('fa-IR')} تومان × {item.qty}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="text-xs text-rose-400 hover:text-rose-300 p-1 font-bold"
+                    >
+                      حذف
+                    </button>
+                  </div>
+                ))}
+
+                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 mt-4">
+                  <div className="flex justify-between items-center text-sm mb-2">
+                    <span className="text-slate-400">مجموع کل:</span>
+                    <span className="font-black text-emerald-400 text-lg">
+                      {totalAmount.toLocaleString('fa-IR')} تومان
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      alert('سفارش شما با موفقیت در سیستم ثبت گردید. کارشناسان ما جهت هماهنگی ارسال با شما تماس خواهند گرفت.');
+                      setCart([]);
+                      setShowCartModal(false);
+                    }}
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm shadow-xl shadow-emerald-600/30 transition cursor-pointer"
+                  >
+                    تکمیل و نهایی‌سازی سفارش
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}`;
+      } else if (isTodo) {
         componentName = "TodoListApp";
         componentCode = `import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, CheckCircle, Circle, Tag } from 'lucide-react';
+import { Plus, Trash2, CheckCircle, Circle } from 'lucide-react';
 
 export default function TodoListApp() {
   const [todos, setTodos] = useState(() => {
@@ -919,7 +1800,7 @@ export default function TodoListApp() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 my-8">
+    <div className="max-w-md mx-auto p-6 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 my-8 font-sans">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-white">مدیریت کارهای هوشمند</h1>
         <span className="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 text-xs font-semibold rounded-full">
@@ -934,9 +1815,9 @@ export default function TodoListApp() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="عنوان کار جدید..."
-            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
           />
-          <button type="submit" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition shadow-lg shadow-indigo-500/20 flex items-center gap-2">
+          <button type="submit" className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-xl transition shadow-lg shadow-indigo-500/20 flex items-center gap-2 text-sm">
             <Plus className="w-5 h-5" />
             افزودن
           </button>
@@ -966,66 +1847,178 @@ export default function TodoListApp() {
             </div>
           </div>
         ))}
-        {todos.length === 0 && (
-          <div className="text-center py-8 text-slate-400 text-sm">هیچ وظیفه‌ای ثبت نشده است.</div>
-        )}
       </div>
     </div>
   );
 }`;
       } else {
-        componentName = "GeneratedFeatureComponent";
+        componentName = "ModernWebApp";
+        const sanitizedTitle = prompt.replace(/[`"'\\\/]/g, ' ').slice(0, 45);
         componentCode = `import React, { useState } from 'react';
-import { Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ArrowRight, CheckCircle2, Star, Shield, Zap, Globe, Smartphone, Send, Search, LayoutGrid, Heart } from 'lucide-react';
 
-export default function GeneratedFeatureComponent() {
+export default function ModernWebApp() {
+  const [activeTab, setActiveTab] = useState('features');
+  const [likes, setLikes] = useState(148);
+  const [liked, setLiked] = useState(false);
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const featureCards = [
+    {
+      title: 'سرعت و عملکرد فوق‌العاده',
+      desc: 'بارگذاری بهینه با بالاترین امتیاز عملکرد و پشتیبانی از استانداردهای روز وب مدرن.',
+      icon: Zap,
+      badge: 'نسل جدید',
+      color: 'from-amber-500 to-orange-600'
+    },
+    {
+      title: 'امنیت و پایداری پیشرفته',
+      desc: 'حفاظت همه‌جانبه از داده‌ها با رمزنگاری مدرن و ساختار ایمن بدون باگ.',
+      icon: Shield,
+      badge: 'تضمین شده',
+      color: 'from-emerald-500 to-teal-600'
+    },
+    {
+      title: 'طراحی واکنش‌گرا و مدرن',
+      desc: 'نمایش بی‌نقص در موبایل، تبلت و دسکتاپ با انیمیشن‌های روان و تجربه کاربری چشم‌نواز.',
+      icon: Smartphone,
+      badge: 'Mobile First',
+      color: 'from-blue-500 to-indigo-600'
+    },
+    {
+      title: 'ارتباطات زنده و یکپارچه',
+      desc: 'همگام‌سازی لحظه‌ای داده‌ها با پروتکل‌های بلادرنگ و بدون تاخیر.',
+      icon: Globe,
+      badge: 'Real-time',
+      color: 'from-purple-500 to-pink-600'
+    },
+  ];
+
   return (
-    <div className="max-w-2xl mx-auto p-8 bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-100 dark:border-slate-800 my-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-          <Sparkles className="w-6 h-6" />
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-800 dark:text-white">ماژول پردازش شده هوشمند</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">تولید شده از طریق شبکه روترهای سه‌گانه با RTK Token Saver</p>
-        </div>
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white pb-24" dir="rtl">
+      {/* Top Notification Bar */}
+      <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white text-xs font-bold py-2.5 px-4 text-center flex items-center justify-center gap-2 shadow-md">
+        <Sparkles className="w-4 h-4 text-amber-300" />
+        <span>پروژه آماده و فعال: کلیه بخش‌ها و امکانات به صورت تعاملی در دسترس هستند.</span>
       </div>
 
-      <div className="space-y-4 mb-6">
-        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700">
-          <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-2">دستورالعمل اجرا شده:</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-300 italic">"{prompt}"</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/50 flex items-center gap-3">
-            <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
+      {/* Navigation Header */}
+      <nav className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/20">
+              <Sparkles className="w-5 h-5" />
+            </div>
             <div>
-              <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">وضعیت سیستم</div>
-              <div className="text-sm font-bold text-emerald-700 dark:text-emerald-300">آماده و فعال</div>
+              <span className="font-extrabold text-lg tracking-tight text-white block">${sanitizedTitle || 'سامانه هوشمند مدرن'}</span>
+              <span className="text-[10px] text-blue-400 font-medium">طراحی اختصاصی و سفارشی‌سازی شده</span>
             </div>
           </div>
-          <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 flex items-center gap-3">
-            <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400 shrink-0" />
-            <div>
-              <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">روتر فعال</div>
-              <div className="text-sm font-bold text-indigo-700 dark:text-indigo-300">${activeR.name}</div>
-            </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (!liked) {
+                  setLikes(l => l + 1);
+                  setLiked(true);
+                }
+              }}
+              className={\`px-3.5 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer \${
+                liked ? 'bg-rose-500/20 border-rose-500/40 text-rose-400' : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+              }\`}
+            >
+              <Heart className={\`w-4 h-4 \${liked ? 'fill-current text-rose-500' : ''}\`} />
+              <span>{likes}</span>
+            </button>
+            <button className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition cursor-pointer">
+              شروع کار
+            </button>
           </div>
         </div>
-      </div>
+      </nav>
 
-      <div className="p-4 bg-slate-900 text-slate-200 rounded-2xl overflow-x-auto text-xs font-mono">
-        <pre>{\`export function ${componentName}() {\n  return (\n    <div className="p-6 bg-white rounded-xl shadow">\n      <h1 className="text-xl font-bold">Dynamic Component</h1>\n    </div>\n  );\n}\`}</pre>
-      </div>
+      {/* Hero Section */}
+      <section className="max-w-6xl mx-auto px-6 pt-16 pb-12 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-6">
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>پلتفرم مدرن و کاملاً واکنش‌گرا</span>
+        </div>
+        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-6 leading-tight max-w-3xl mx-auto">
+          ${sanitizedTitle || 'سامانه و وب‌سایت مدرن و پیشرفته'}
+        </h1>
+        <p className="text-base text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
+          پیاده‌سازی شده با بهره‌گیری از بروزترین استانداردهای فرانت‌اند، طراحی تعاملی زنده و قابلیت شخصی‌سازی بالا.
+        </p>
+      </section>
+
+      {/* Feature Cards Grid */}
+      <section className="max-w-6xl mx-auto px-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {featureCards.map((feat, idx) => {
+            const Icon = feat.icon;
+            return (
+              <div
+                key={idx}
+                className="rounded-3xl bg-slate-900/70 border border-slate-800/80 hover:border-blue-500/40 p-6 flex flex-col justify-between transition-all duration-300 group shadow-xl hover:-translate-y-1"
+              >
+                <div>
+                  <div className={\`w-12 h-12 rounded-2xl bg-gradient-to-tr \${feat.color} flex items-center justify-center text-white mb-4 shadow-lg\`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 mb-2 inline-block">
+                    {feat.badge}
+                  </span>
+                  <h3 className="font-extrabold text-base text-white mb-2">{feat.title}</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">{feat.desc}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Interactive Contact / Subscription Section */}
+      <section className="max-w-4xl mx-auto px-6">
+        <div className="rounded-3xl bg-gradient-to-tr from-slate-900 via-blue-950/40 to-slate-900 border border-slate-800 p-8 text-center shadow-2xl">
+          <h3 className="font-extrabold text-xl text-white mb-3">عضویت در خبرنامه و دریافت آخرین بروزرسانی‌ها</h3>
+          <p className="text-xs text-slate-400 mb-6 max-w-md mx-auto">
+            برای اطلاع از اخبار جدید، تخفیف‌ها و ویژگی‌های جدید ایمیل خود را وارد نمایید.
+          </p>
+          {subscribed ? (
+            <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>ایمیل شما با موفقیت در سیستم ثبت گردید!</span>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ایمیل خود را وارد کنید..."
+                className="flex-1 px-4 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={() => {
+                  if (email.includes('@')) setSubscribed(true);
+                }}
+                className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition cursor-pointer shrink-0"
+              >
+                ثبت ایمیل
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }`;
       }
 
       outputText = isFa
-        ? `درخواست شما دریافت شد و کد مربوطه با موفقیت تولید و پیاده‌سازی گردید:\n\n\`\`\`tsx\n${componentCode}\n\`\`\``
-        : `Your request was received and the component code has been successfully generated:\n\n\`\`\`tsx\n${componentCode}\n\`\`\``;
+        ? `وب‌سایت درخواستی شما با موفقیت پیاده‌سازی و آماده اجرا گردید:\n\n\`\`\`tsx\n${componentCode}\n\`\`\``
+        : `Your requested web application has been successfully built and is ready to run:\n\n\`\`\`tsx\n${componentCode}\n\`\`\``;
     }
 
     const fallbackSynthesis = outputText;

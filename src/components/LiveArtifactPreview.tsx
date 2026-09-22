@@ -316,7 +316,7 @@ export function LiveArtifactPreview({
 
   // Universal Live Sandbox HTML Generator (React 18 / Vue / HTML / Tailwind / Lucide Icons)
   const generateFullHtml = (code: string) => {
-    if (artifact?.livePreviewHtml) {
+    if (artifact?.livePreviewHtml && !artifact.livePreviewHtml.includes('Component compiled successfully.')) {
       return artifact.livePreviewHtml;
     }
 
@@ -324,7 +324,58 @@ export function LiveArtifactPreview({
       return code;
     }
 
+    // Direct HTML snippet without React wrapper
+    if (!isReactCode && !isVueCode && (code.trim().startsWith('<') || code.includes('<div') || code.includes('<section') || code.includes('<header'))) {
+      return `<!DOCTYPE html>
+<html lang="fa" dir="auto" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${artifact?.title || 'Live Website'}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', 'Vazirmatn', system-ui, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #070b14;
+      color: #f1f5f9;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.4); border-radius: 9999px; }
+  </style>
+</head>
+<body class="bg-[#070b14] text-slate-100 min-h-screen">
+  ${code}
+  <script>
+    if (window.lucide) window.lucide.createIcons();
+  </script>
+</body>
+</html>`;
+    }
+
     if (detectedLanguage === 'react' || isReactCode) {
+      // Discover main component name from code
+      let mainExportName = 'App';
+      const defaultFuncMatch = code.match(/export\s+default\s+function\s+([A-Za-z0-9_]+)/);
+      const defaultNamedMatch = code.match(/export\s+default\s+([A-Za-z0-9_]+)/);
+      const anyComponentMatch = code.match(/(?:function|const|var|let)\s+([A-Z][A-Za-z0-9_]*)/);
+      
+      if (defaultFuncMatch) {
+        mainExportName = defaultFuncMatch[1];
+      } else if (defaultNamedMatch) {
+        mainExportName = defaultNamedMatch[1];
+      } else if (anyComponentMatch) {
+        mainExportName = anyComponentMatch[1];
+      }
+
       // Clean import statements from raw React code for in-browser Babel Standalone execution
       let cleanedCode = code
         .replace(/import\s+React(?:\s*,\s*\{([^}]+)\})?\s+from\s+['"][^'"]+['"];?/g, (_, hooks) => {
@@ -334,7 +385,7 @@ export function LiveArtifactPreview({
           return `const { ${icons} } = window.LucideProxy;`;
         })
         .replace(/import\s+.*?\s+from\s+['"][^'"]+['"];?/g, '')
-        .replace(/export\s+default\s+function\s+([A-Za-z0-9_]+)/g, 'function $1(...args) { return __AppImpl__$1.apply(this, args); }\nconst __AppImpl__$1 = function $1')
+        .replace(/export\s+default\s+function\s+([A-Za-z0-9_]+)/g, 'window.__MainAppExport__ = function $1')
         .replace(/export\s+default\s+/g, 'window.__MainAppExport__ = ')
         .replace(/export\s+(?:const|let|var|function|class)\s+/g, '');
 
@@ -418,25 +469,42 @@ export function LiveArtifactPreview({
     const { 
       TrendingUp, TrendingDown, DollarSign, Activity, 
       ArrowUpRight, ArrowDownRight, RefreshCw, Zap, Shield, 
-      PieChart, BarChart2, Bell, Wallet, ChevronRight, Check, Copy, X, Plus, Minus, Search 
+      PieChart, BarChart2, Bell, Wallet, ChevronRight, Check, Copy, X, Plus, Minus, Search,
+      Star, Home, ShoppingCart, User, Phone, Mail, MapPin, Compass, Play, Pause, Heart,
+      ExternalLink, Smartphone, Tablet, Monitor, Lock, Unlock, Moon, Sun, Layers, Sparkles
     } = window.LucideProxy;
 
     try {
       ${cleanedCode}
 
-      const TargetApp = window.__MainAppExport__ ||
-        (typeof CryptoTradingDashboard !== 'undefined' ? CryptoTradingDashboard : null) ||
-        (typeof App !== 'undefined' ? App : null) ||
-        (typeof Main !== 'undefined' ? Main : null);
+      let TargetApp = window.__MainAppExport__;
+      
+      if (!TargetApp) {
+        try {
+          if (typeof ${mainExportName} === 'function') {
+            TargetApp = ${mainExportName};
+          }
+        } catch (_) {}
+      }
+
+      if (!TargetApp) {
+        try {
+          if (typeof App === 'function') TargetApp = App;
+          else if (typeof Main === 'function') TargetApp = Main;
+          else if (typeof LandingPage === 'function') TargetApp = LandingPage;
+          else if (typeof Website === 'function') TargetApp = Website;
+          else if (typeof Dashboard === 'function') TargetApp = Dashboard;
+        } catch (_) {}
+      }
 
       if (TargetApp) {
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<TargetApp />);
+        root.render(React.createElement(TargetApp));
         setTimeout(() => {
           if (window.lucide) window.lucide.createIcons();
         }, 100);
       } else {
-        document.getElementById('root').innerHTML = '<div class="p-6 text-center text-cyan-400 font-mono">React component executed and loaded successfully.</div>';
+        document.getElementById('root').innerHTML = '<div class="p-8 text-center text-slate-300 font-sans"><div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 font-bold text-2xl">⚡</div><h2 class="text-xl font-bold text-white mb-2">برنامه با موفقیت بارگذاری شد</h2><p class="text-sm text-slate-400">نمایش زنده در حال اجرا است.</p></div>';
       }
     } catch (renderError) {
       console.error("React Live Render Error:", renderError);

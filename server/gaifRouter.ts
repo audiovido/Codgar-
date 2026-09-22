@@ -268,13 +268,13 @@ export class GaifDevRouter {
       try {
         const client = km.getClient();
         // Translate model ID if needed for Gemini SDK
-        let sdkModel = 'gemini-3.6-flash';
-        if (currentModelId === 'codgar-reflex-lite' || currentModelId === 'gemini-3.5-flash') {
-          sdkModel = 'gemini-3.5-flash';
+        let sdkModel = 'gemini-3.8-flash';
+        if (currentModelId === 'codgar-reflex-lite' || currentModelId === 'gemini-3.1-flash-lite') {
+          sdkModel = 'gemini-3.1-flash-lite';
         } else if (currentModelId.startsWith('gemini')) {
           sdkModel = currentModelId;
         } else {
-          sdkModel = attempts % 2 === 0 ? 'gemini-3.5-flash' : 'gemini-3.6-flash';
+          sdkModel = attempts % 2 === 0 ? 'gemini-3.1-flash-lite' : 'gemini-3.8-flash';
         }
         const res = await operation(sdkModel, client);
         return {
