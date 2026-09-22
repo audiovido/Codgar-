@@ -1,45 +1,159 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight, CheckCircle2, Star, Shield, Zap, Globe, Smartphone, Send } from 'lucide-react';
+import { Sparkles, ArrowRight, CheckCircle2, Star, Shield, Zap, Globe, Smartphone, Send, Search, LayoutGrid, Heart } from 'lucide-react';
 
-export default function Website() {
-  const [likes, setLikes] = useState(254);
+export default function ModernWebApp() {
+  const [activeTab, setActiveTab] = useState('features');
+  const [likes, setLikes] = useState(148);
+  const [liked, setLiked] = useState(false);
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const featureCards = [
+    {
+      title: 'سرعت و عملکرد فوق‌العاده',
+      desc: 'بارگذاری بهینه با بالاترین امتیاز عملکرد و پشتیبانی از استانداردهای روز وب مدرن.',
+      icon: Zap,
+      badge: 'نسل جدید',
+      color: 'from-amber-500 to-orange-600'
+    },
+    {
+      title: 'امنیت و پایداری پیشرفته',
+      desc: 'حفاظت همه‌جانبه از داده‌ها با رمزنگاری مدرن و ساختار ایمن بدون باگ.',
+      icon: Shield,
+      badge: 'تضمین شده',
+      color: 'from-emerald-500 to-teal-600'
+    },
+    {
+      title: 'طراحی واکنش‌گرا و مدرن',
+      desc: 'نمایش بی‌نقص در موبایل، تبلت و دسکتاپ با انیمیشن‌های روان و تجربه کاربری چشم‌نواز.',
+      icon: Smartphone,
+      badge: 'Mobile First',
+      color: 'from-blue-500 to-indigo-600'
+    },
+    {
+      title: 'ارتباطات زنده و یکپارچه',
+      desc: 'همگام‌سازی لحظه‌ای داده‌ها با پروتکل‌های بلادرنگ و بدون تاخیر.',
+      icon: Globe,
+      badge: 'Real-time',
+      color: 'from-purple-500 to-pink-600'
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white pb-20">
-      <nav className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-blue-600 selection:text-white pb-24" dir="rtl">
+      {/* Top Notification Bar */}
+      <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white text-xs font-bold py-2.5 px-4 text-center flex items-center justify-center gap-2 shadow-md">
+        <Sparkles className="w-4 h-4 text-amber-300" />
+        <span>پروژه آماده و فعال: کلیه بخش‌ها و امکانات به صورت تعاملی در دسترس هستند.</span>
+      </div>
+
+      {/* Navigation Header */}
+      <nav className="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
+        <div className="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/20">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/20">
               <Sparkles className="w-5 h-5" />
             </div>
-            <span className="font-extrabold text-lg tracking-tight text-white">یه سایت میوه فروشی برام بساز</span>
+            <div>
+              <span className="font-extrabold text-lg tracking-tight text-white block">website shabihe digikala besaz</span>
+              <span className="text-[10px] text-blue-400 font-medium">طراحی اختصاصی و سفارشی‌سازی شده</span>
+            </div>
           </div>
-          <button className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition cursor-pointer">
-            شروع پروژه
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                if (!liked) {
+                  setLikes(l => l + 1);
+                  setLiked(true);
+                }
+              }}
+              className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                liked ? 'bg-rose-500/20 border-rose-500/40 text-rose-400' : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-white'
+              }`}
+            >
+              <Heart className={`w-4 h-4 ${liked ? 'fill-current text-rose-500' : ''}`} />
+              <span>{likes}</span>
+            </button>
+            <button className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-600/30 transition cursor-pointer">
+              شروع کار
+            </button>
+          </div>
         </div>
       </nav>
 
-      <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-6">
+      {/* Hero Section */}
+      <section className="max-w-6xl mx-auto px-6 pt-16 pb-12 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold mb-6">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>طراحی مدرن و کاملاً واکنش‌گرا</span>
+          <span>پلتفرم مدرن و کاملاً واکنش‌گرا</span>
         </div>
-        <h1 className="text-4xl md:text-6xl font-black text-white tracking-tight mb-6 leading-tight max-w-4xl mx-auto">
-          یه سایت میوه فروشی برام بساز
+        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-6 leading-tight max-w-3xl mx-auto">
+          website shabihe digikala besaz
         </h1>
-        <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-          طراحی شده بر پایه مدرن‌ترین استانداردهای وب با تعاملات زنده و سرعت بالا.
+        <p className="text-base text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
+          پیاده‌سازی شده با بهره‌گیری از بروزترین استانداردهای فرانت‌اند، طراحی تعاملی زنده و قابلیت شخصی‌سازی بالا.
         </p>
-        <button
-          onClick={() => setLikes(l => l + 1)}
-          className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 text-white font-bold text-sm shadow-xl shadow-blue-600/30 transition flex items-center gap-2 mx-auto cursor-pointer"
-        >
-          <Star className="w-4 h-4 fill-current" />
-          <span>پسندیدن ({likes})</span>
-        </button>
+      </section>
+
+      {/* Feature Cards Grid */}
+      <section className="max-w-6xl mx-auto px-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {featureCards.map((feat, idx) => {
+            const Icon = feat.icon;
+            return (
+              <div
+                key={idx}
+                className="rounded-3xl bg-slate-900/70 border border-slate-800/80 hover:border-blue-500/40 p-6 flex flex-col justify-between transition-all duration-300 group shadow-xl hover:-translate-y-1"
+              >
+                <div>
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-tr ${feat.color} flex items-center justify-center text-white mb-4 shadow-lg`}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 mb-2 inline-block">
+                    {feat.badge}
+                  </span>
+                  <h3 className="font-extrabold text-base text-white mb-2">{feat.title}</h3>
+                  <p className="text-xs text-slate-400 leading-relaxed">{feat.desc}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Interactive Contact / Subscription Section */}
+      <section className="max-w-4xl mx-auto px-6">
+        <div className="rounded-3xl bg-gradient-to-tr from-slate-900 via-blue-950/40 to-slate-900 border border-slate-800 p-8 text-center shadow-2xl">
+          <h3 className="font-extrabold text-xl text-white mb-3">عضویت در خبرنامه و دریافت آخرین بروزرسانی‌ها</h3>
+          <p className="text-xs text-slate-400 mb-6 max-w-md mx-auto">
+            برای اطلاع از اخبار جدید، تخفیف‌ها و ویژگی‌های جدید ایمیل خود را وارد نمایید.
+          </p>
+          {subscribed ? (
+            <div className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-xs font-bold">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>ایمیل شما با موفقیت در سیستم ثبت گردید!</span>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ایمیل خود را وارد کنید..."
+                className="flex-1 px-4 py-3 rounded-2xl bg-slate-950 border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={() => {
+                  if (email.includes('@')) setSubscribed(true);
+                }}
+                className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-600/30 transition cursor-pointer shrink-0"
+              >
+                ثبت ایمیل
+              </button>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

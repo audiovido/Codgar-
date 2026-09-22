@@ -19,15 +19,8 @@ import {
   Zap,
   MessageSquare,
   Sparkle,
-  FolderOpen,
-  FolderPlus,
-  FolderCheck,
-  CheckCircle2,
-  HardDrive,
-  Play,
   Layers,
   ArrowRight,
-  RefreshCw,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { TranslationDict, Language, translations } from '../utils/translations';
@@ -150,130 +143,6 @@ export function CodedAiChatCard({
       textareaRef.current.style.height = `${Math.min(Math.max(scrollHeight, 38), 160)}px`;
     }
   }, [inputText]);
-
-  // Autonomous Desktop & Screenshot Organizer State
-  const [isOrganizingDesktop, setIsOrganizingDesktop] = useState<boolean>(false);
-  const [desktopOrganizeResult, setDesktopOrganizeResult] = useState<{
-    success: boolean;
-    folder: string;
-    count: number;
-    files: string[];
-    source: 'browser_fs' | 'local_bridge';
-    message: string;
-  } | null>(null);
-
-  const handleAutonomousDesktopOrganize = async () => {
-    setIsOrganizingDesktop(true);
-    setDesktopOrganizeResult(null);
-
-    const folderName = isRTL ? 'کدگر اسکرین شات' : 'Codgar Screenshots';
-
-    // 1. Try Native Browser File System Access API (showDirectoryPicker)
-    if (typeof (window as any).showDirectoryPicker === 'function') {
-      try {
-        const dirHandle = await (window as any).showDirectoryPicker({
-          mode: 'readwrite',
-          startIn: 'desktop',
-        });
-
-        // Create or get subfolder
-        const destFolderHandle = await dirHandle.getDirectoryHandle(folderName, { create: true });
-        const screenshotRegex = /(screenshot|screen shot|screen_shot|اسکرین|اسکرین‌شات|اسکرین شات|capture|snip|\.png$|\.jpg$|\.jpeg$)/i;
-
-        const movedFiles: string[] = [];
-
-        // Iterate directory entries
-        for await (const entry of dirHandle.values()) {
-          if (entry.kind === 'file' && screenshotRegex.test(entry.name)) {
-            try {
-              const fileHandle = entry;
-              const file = await fileHandle.getFile();
-              
-              // Write into subfolder
-              const newFileHandle = await destFolderHandle.getFileHandle(entry.name, { create: true });
-              const writable = await newFileHandle.createWritable();
-              await writable.write(await file.arrayBuffer());
-              await writable.close();
-
-              // Delete original if browser supports removal
-              if (typeof dirHandle.removeEntry === 'function') {
-                try {
-                  await dirHandle.removeEntry(entry.name);
-                } catch {
-                  // If browser restricts removal, file was copied safely
-                }
-              }
-
-              movedFiles.push(entry.name);
-            } catch (fileErr) {
-              console.warn('Error organizing file:', fileErr);
-            }
-          }
-        }
-
-        const successResult = {
-          success: true,
-          folder: folderName,
-          count: movedFiles.length,
-          files: movedFiles,
-          source: 'browser_fs' as const,
-          message: isRTL
-            ? `با موفقیت ${movedFiles.length} فایل اسکرین‌شات به پوشه "${folderName}" منتقل شدند.`
-            : `Successfully organized ${movedFiles.length} screenshot files into "${folderName}".`,
-        };
-
-        setDesktopOrganizeResult(successResult);
-        setIsOrganizingDesktop(false);
-        return;
-      } catch (pickerErr: any) {
-        if (pickerErr.name === 'AbortError') {
-          setIsOrganizingDesktop(false);
-          return;
-        }
-        console.log('Falling back to Local Bridge filesystem endpoint...', pickerErr);
-      }
-    }
-
-    // 2. Fallback to Local Bridge MCP Server Execution
-    try {
-      const res = await fetch('/api/local-bridge/organize-desktop', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ destinationFolderName: folderName }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setDesktopOrganizeResult({
-          success: true,
-          folder: data.destinationFolder,
-          count: data.filesMovedCount,
-          files: data.movedFiles || [],
-          source: 'local_bridge',
-          message: data.message,
-        });
-      } else {
-        setDesktopOrganizeResult({
-          success: false,
-          folder: folderName,
-          count: 0,
-          files: [],
-          source: 'local_bridge',
-          message: data.error || 'خطا در اجرای خودکار',
-        });
-      }
-    } catch (err: any) {
-      setDesktopOrganizeResult({
-        success: false,
-        folder: folderName,
-        count: 0,
-        files: [],
-        source: 'local_bridge',
-        message: err.message,
-      });
-    } finally {
-      setIsOrganizingDesktop(false);
-    }
-  };
 
   // Auto-scroll to bottom on new messages or streaming typing
   useEffect(() => {
@@ -596,75 +465,6 @@ export function CodedAiChatCard({
                     )}
                   </button>
                 </div>
-
-                {/* Interactive Desktop & Screenshot Organizer Widget */}
-                {!isUser && (textContent.includes('اسکرین') || textContent.includes('دسکتاپ') || textContent.includes('screenshot') || textContent.includes('پوشه') || textContent.includes('فولدر')) && (
-                  <div className="mt-3 pt-3 border-t border-blue-200/70">
-                    <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-sky-50/80 to-indigo-50/90 border border-blue-200/80 shadow-sm text-slate-800 dir-auto">
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
-                            <FolderPlus className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <span className="text-xs font-black text-slate-900 block">
-                              {isRTL ? 'مرتب‌سازی و انتقال اسکرین‌شات‌ها' : 'Auto-Organize Screenshots'}
-                            </span>
-                            <span className="text-[10px] text-blue-700 font-medium">
-                              {isRTL ? 'ساخت پوشه اختصاصی و انتقال فایل‌های اسکرین‌شات دسکتاپ' : 'Create a dedicated folder and move desktop screenshots'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-300">
-                          {isRTL ? 'آماده' : 'Ready'}
-                        </span>
-                      </div>
-
-                      {/* Execution Result Status */}
-                      {desktopOrganizeResult ? (
-                        <div className="mt-2.5 p-3 rounded-xl bg-white/90 border border-emerald-300 shadow-2xs">
-                          <div className="flex items-center gap-2 text-emerald-800 text-xs font-bold mb-1">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                            <span>{desktopOrganizeResult.message}</span>
-                          </div>
-
-                          <div className="flex items-center gap-3 text-[11px] text-slate-600 font-mono mt-2 pt-2 border-t border-slate-100">
-                            <span className="flex items-center gap-1 font-sans">
-                              <FolderCheck className="w-3.5 h-3.5 text-blue-600" />
-                              <strong className="text-slate-800">{desktopOrganizeResult.folder}</strong>
-                            </span>
-                            <span>•</span>
-                            <span className="font-sans">
-                              {isRTL ? `تعداد فایل‌ها: ${desktopOrganizeResult.count}` : `Files: ${desktopOrganizeResult.count}`}
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="mt-2 flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={handleAutonomousDesktopOrganize}
-                            disabled={isOrganizingDesktop}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-sky-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black shadow-[0_4px_12px_rgba(37,99,235,0.25)] active:scale-95 transition cursor-pointer disabled:opacity-60"
-                          >
-                            {isOrganizingDesktop ? (
-                              <>
-                                <RefreshCw className="w-4 h-4 animate-spin text-white" />
-                                <span>{isRTL ? 'در حال انتقال فایل‌ها...' : 'Organizing files...'}</span>
-                              </>
-                            ) : (
-                              <>
-                                <Play className="w-4 h-4 fill-current" />
-                                <span>{isRTL ? '📁 انتقال اسکرین‌شات‌ها به پوشه جدید' : '📁 Move Screenshots to Folder'}</span>
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
 
                 {/* Quick Action Button: Transition from Chat to Coding Mode when permission requested */}
                 {!isUser && (textContent.includes('کدنویسی') || textContent.toLowerCase().includes('coding mode')) && activeMode === 'chat' && (
