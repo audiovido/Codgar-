@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import {
   Layers,
-  GitCompare,
-  LayoutGrid,
-  FileCode2,
   Terminal,
   MonitorPlay,
   Fuel,
+  CreditCard,
 } from 'lucide-react';
 import { AgentMode } from '../types';
 import { Language, translations } from '../utils/translations';
@@ -16,11 +14,12 @@ interface Props {
   onSelectMode?: (mode: AgentMode) => void;
   onNewTask?: () => void;
   onOpenQueue: () => void;
-  onOpenChanges: () => void;
-  onOpenWorkspaces: () => void;
-  onOpenEditor: () => void;
+  onOpenChanges?: () => void;
+  onOpenWorkspaces?: () => void;
+  onOpenEditor?: () => void;
   onOpenTerminal: () => void;
   onOpenPreview?: () => void;
+  onOpenBilling?: () => void;
   onOpenFuel?: () => void;
   onOpenSettings?: () => void;
   isQueueActive?: boolean;
@@ -28,6 +27,7 @@ interface Props {
   isWorkspacesActive?: boolean;
   isEditorActive?: boolean;
   isTerminalActive?: boolean;
+  isBillingActive?: boolean;
   isFuelActive?: boolean;
   isPreviewActive?: boolean;
   isExecuting?: boolean;
@@ -36,17 +36,13 @@ interface Props {
 
 export function Sidebar({
   onOpenQueue,
-  onOpenChanges,
-  onOpenWorkspaces,
-  onOpenEditor,
   onOpenTerminal,
   onOpenPreview,
+  onOpenBilling,
   onOpenFuel,
   isQueueActive = false,
-  isChangesActive = false,
-  isWorkspacesActive = false,
-  isEditorActive = false,
   isTerminalActive = false,
+  isBillingActive = false,
   isFuelActive = false,
   isPreviewActive = false,
   isExecuting = false,
@@ -54,32 +50,19 @@ export function Sidebar({
 }: Props) {
   const t = translations[language] || translations.en;
   const isFa = language === 'fa';
-  const [changedCount, setChangedCount] = useState<number>(0);
   const [queueCount, setQueueCount] = useState<number>(0);
 
-  // Poll git status and queue stats for dynamic badges with visibility throttling
+  // Poll queue stats for dynamic badges with visibility throttling
   useEffect(() => {
     let isMounted = true;
 
     const fetchStats = async () => {
       if (typeof document !== 'undefined' && document.hidden) return;
       try {
-        const [gitRes, taskRes] = await Promise.all([
-          fetch('/api/git/status'),
-          fetch('/api/tasks'),
-        ]);
-
-        const gitData = await gitRes.json();
+        const taskRes = await fetch('/api/tasks');
         const taskData = await taskRes.json();
 
         if (isMounted) {
-          if (gitData.success) {
-            const count =
-              (gitData.staged?.length || 0) +
-              (gitData.unstaged?.length || 0) +
-              (gitData.untracked?.length || 0);
-            setChangedCount(count);
-          }
           if (taskData.success && Array.isArray(taskData.tasks)) {
             const pending = taskData.tasks.filter(
               (task: any) => task.status === 'running' || task.status === 'queued'
@@ -128,50 +111,6 @@ export function Sidebar({
       dotColor: isExecuting ? 'bg-amber-500' : 'bg-indigo-500',
     },
     {
-      id: 'changes',
-      title: t.changes,
-      enTitle: 'Changes',
-      desc: t.changesDesc,
-      icon: <GitCompare className="w-4 h-4" />,
-      action: onOpenChanges,
-      badge: changedCount > 0 ? `${changedCount} diff` : t.clean,
-      badgeStyle: changedCount > 0
-        ? 'bg-emerald-50 text-emerald-700 border-emerald-200/70'
-        : 'bg-slate-100 text-slate-600 border-slate-200/60',
-      iconContainerBg: 'bg-emerald-50/90 text-emerald-600 border-emerald-100',
-      active: isChangesActive,
-      hasDot: false,
-      dotColor: 'bg-emerald-500',
-    },
-    {
-      id: 'workspaces',
-      title: t.workspaces,
-      enTitle: 'Workspaces',
-      desc: t.workspacesDesc,
-      icon: <LayoutGrid className="w-4 h-4" />,
-      action: onOpenWorkspaces,
-      badge: isFa ? '۳ ایجنت' : '3 Agents',
-      badgeStyle: 'bg-sky-50 text-sky-700 border-sky-200/70',
-      iconContainerBg: 'bg-sky-50/90 text-sky-600 border-sky-100',
-      active: isWorkspacesActive,
-      hasDot: false,
-      dotColor: 'bg-sky-500',
-    },
-    {
-      id: 'editor',
-      title: t.editor,
-      enTitle: 'IDE',
-      desc: t.editorDesc,
-      icon: <FileCode2 className="w-4 h-4" />,
-      action: onOpenEditor,
-      badge: 'IDE',
-      badgeStyle: 'bg-blue-50 text-blue-700 border-blue-200/70',
-      iconContainerBg: 'bg-blue-50/90 text-blue-600 border-blue-100',
-      active: isEditorActive,
-      hasDot: false,
-      dotColor: 'bg-blue-500',
-    },
-    {
       id: 'terminal',
       title: isFa ? 'ترمینال و تغییرات کد' : 'Terminal & Code Changes',
       enTitle: 'Terminal',
@@ -193,7 +132,7 @@ export function Sidebar({
       id: 'preview',
       title: isFa ? 'پیش‌نمایش زنده اپلیکیشن' : 'Live Application Preview',
       enTitle: 'Live',
-      desc: isFa ? 'مشاهده زنده سایت و برنامه‌های ساخته شده (مانند سبزمارکت)' : 'Interactive live rendering of built apps & components',
+      desc: isFa ? 'مشاهده زنده سایت و برنامه‌های ساخته شده' : 'Interactive live rendering of built apps & components',
       icon: <MonitorPlay className="w-4 h-4" />,
       action: onOpenPreview,
       badge: 'Live',
@@ -206,6 +145,24 @@ export function Sidebar({
       active: isPreviewActive,
       hasDot: false,
       dotColor: 'bg-emerald-500',
+    },
+    {
+      id: 'billing',
+      title: isFa ? 'امور مالی و ارتقای اشتراک' : 'Billing & Plans',
+      enTitle: 'Billing',
+      desc: isFa ? '۵ ساعت رایگان روزانه، خرید ساعت بیشتر و پلن‌های نامحدود' : '5h free daily, buy extra hours & unlimited AI plans',
+      icon: <CreditCard className="w-4 h-4" />,
+      action: onOpenBilling,
+      badge: isFa ? '۵ساعت فری' : '5h Free',
+      badgeStyle: isBillingActive
+        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold border-emerald-400 shadow-xs'
+        : 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',
+      iconContainerBg: isBillingActive
+        ? 'bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 border-emerald-400 shadow-xs'
+        : 'bg-emerald-50/90 text-emerald-700 border-emerald-200 shadow-2xs',
+      active: isBillingActive,
+      hasDot: true,
+      dotColor: 'bg-emerald-400',
     },
     {
       id: 'fuel',
@@ -238,58 +195,61 @@ export function Sidebar({
       {/* Navigation List */}
       <div className="w-full flex flex-col gap-1.5 relative items-center">
         {navSections.map((item) => {
-          const isButtonActive = item.active;
-
           return (
-            <div key={item.id} className="relative group w-full flex justify-center">
+            <div key={item.id} className="relative group/nav flex items-center justify-center w-full">
               <button
                 type="button"
                 onClick={item.action}
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 cursor-pointer shadow-2xs active:scale-95 relative ${
-                  isButtonActive
-                    ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/35 ring-2 ring-blue-400/80 scale-105'
-                    : 'ice-glass-btn text-slate-700 hover:text-blue-600 hover:bg-white/90'
+                className={`relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 ${
+                  item.active
+                    ? 'shadow-md shadow-emerald-500/20 scale-105'
+                    : 'hover:scale-102 hover:shadow-sm'
                 }`}
               >
-                {/* Micro Icon Container */}
+                {/* 3D Glass Surface */}
                 <div
-                  className={`w-7 h-7 rounded-xl flex items-center justify-center transition-all shrink-0 border ${
-                    isButtonActive
-                      ? 'bg-white/25 text-white border-white/40 shadow-xs'
-                      : `${item.iconContainerBg} shadow-2xs group-hover:scale-105`
+                  className={`w-full h-full rounded-2xl flex items-center justify-center border transition-all duration-300 ${
+                    item.active
+                      ? item.iconContainerBg
+                      : 'bg-white/80 text-slate-600 border-white/90 hover:bg-white hover:text-blue-600 hover:border-blue-200'
                   }`}
                 >
                   {item.icon}
                 </div>
 
-                {/* Subtle Status Pip in Collapsed Mode */}
+                {/* Status Dot */}
                 {item.hasDot && (
                   <span
-                    className={`absolute top-1.5 ${isFa ? 'left-1.5' : 'right-1.5'} flex h-2 w-2 items-center justify-center`}
-                  >
-                    <span className={`relative inline-flex rounded-full h-2 w-2 ${item.dotColor} ring-2 ring-white shadow-xs`} />
-                  </span>
+                    className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-white ${item.dotColor} shadow-xs animate-pulse`}
+                  />
                 )}
               </button>
 
-              {/* Floating Tooltip in Collapsed Mode */}
+              {/* Flyout Tooltip Card */}
               <div
-                className={`absolute top-1/2 -translate-y-1/2 ${
-                  isFa ? 'right-full mr-3' : 'left-full ml-3'
-                } px-3 py-2 rounded-2xl bg-slate-950/95 text-white shadow-2xl border border-white/20 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 z-[100] flex flex-col gap-1 min-w-[160px] ring-1 ring-black/40 backdrop-blur-md`}
-                dir={isFa ? 'rtl' : 'ltr'}
+                className={`absolute ${
+                  isFa
+                    ? 'right-full mr-3.5 origin-right'
+                    : 'left-full ml-3.5 origin-left'
+                } top-1/2 -translate-y-1/2 pointer-events-none opacity-0 translate-x-1 group-hover/nav:translate-x-0 group-hover/nav:opacity-100 transition-all duration-200 z-50`}
               >
-                <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1">
-                  <span className="text-xs font-bold text-white">{item.title}</span>
-                  <span className="text-[9px] font-mono text-cyan-300">{item.enTitle}</span>
-                </div>
-                <p className="text-[10px] text-slate-300 leading-snug">{item.desc}</p>
-                {item.badge && (
-                  <div className="mt-0.5 flex items-center justify-between text-[9px] font-mono text-blue-200 bg-blue-900/60 px-2 py-0.5 rounded-lg border border-blue-400/20">
-                    <span>{isFa ? 'وضعیت' : 'Status'}</span>
-                    <span className="font-bold">{item.badge}</span>
+                <div className="ice-glass-card rounded-2xl p-2.5 px-3 shadow-xl border border-white/90 min-w-[170px] max-w-[220px]">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="font-bold text-slate-800 text-xs tracking-tight">
+                      {item.title}
+                    </span>
+                    {item.badge && (
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${item.badgeStyle}`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
                   </div>
-                )}
+                  <p className="text-[10px] text-slate-500 leading-tight">
+                    {item.desc}
+                  </p>
+                </div>
               </div>
             </div>
           );

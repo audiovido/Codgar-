@@ -21,12 +21,28 @@ import {
   Sparkle,
   Layers,
   ArrowRight,
+  MonitorPlay,
+  CheckCircle2,
+  FileCode2,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { TranslationDict, Language, translations } from '../utils/translations';
 
-function CodeBlockWithCopy({ children }: { children: React.ReactNode }) {
+function CodeBlockWithCopy({
+  children,
+  onOpenTerminal,
+  onOpenPreview,
+  isFa = true,
+}: {
+  children: React.ReactNode;
+  onOpenTerminal?: () => void;
+  onOpenPreview?: () => void;
+  isFa?: boolean;
+}) {
   const [copied, setCopied] = useState(false);
+  const [showInline, setShowInline] = useState(false);
 
   const extractText = (node: any): string => {
     if (typeof node === 'string') return node;
@@ -38,9 +54,12 @@ function CodeBlockWithCopy({ children }: { children: React.ReactNode }) {
     return '';
   };
 
+  const rawCode = extractText(children).trim();
+  const lineCount = rawCode ? rawCode.split('\n').length : 0;
+  const isLargeCode = lineCount > 4;
+
   const handleCopyCode = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const rawCode = extractText(children);
     if (rawCode) {
       navigator.clipboard.writeText(rawCode);
       setCopied(true);
@@ -48,41 +67,97 @@ function CodeBlockWithCopy({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // If small inline snippet or 1-3 lines, keep it compact
+  if (!isLargeCode) {
+    return (
+      <div className="relative group/code my-2 overflow-hidden rounded-xl bg-slate-900/90 border border-white/20 text-sky-100 font-mono text-xs p-2.5">
+        <pre className="overflow-x-auto whitespace-pre-wrap">{children}</pre>
+      </div>
+    );
+  }
+
   return (
     <div
-      className="relative group/code my-3.5 overflow-hidden rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-white/30 text-sky-100 dir-ltr text-left font-mono text-[11px] sm:text-xs leading-relaxed max-w-full shadow-md"
-      dir="ltr"
+      className="my-3 rounded-2xl overflow-hidden bg-gradient-to-br from-[#070e1b] via-[#0b1424] to-[#070e1b] border border-emerald-500/40 shadow-xl transition-all select-none text-slate-100"
+      dir={isFa ? 'rtl' : 'ltr'}
     >
-      <div className="sticky top-0 z-20 flex items-center justify-between px-3.5 py-2 bg-slate-800/95 backdrop-blur-md border-b border-white/15 text-[10px] font-mono text-slate-300 select-none shadow-sm">
-        <span className="flex items-center gap-1.5 text-sky-300 font-bold">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-          <span>کدگر // Terminal & Code Log</span>
-        </span>
+      {/* Top Banner Card */}
+      <div className="p-3.5 sm:p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-black shadow-md shadow-emerald-500/25 shrink-0">
+            <Terminal className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-white text-xs sm:text-sm">
+                {isFa ? 'کدهای پروژه تولید و در ترمینال ثبت گردید' : 'Code Generated & Registered to Terminal'}
+              </span>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-md border border-emerald-800/40 font-bold">
+                {lineCount} {isFa ? 'خط کد' : 'lines'}
+              </span>
+              <span className="text-[10px] text-teal-300 bg-teal-950/60 px-2 py-0.5 rounded-md border border-teal-800/40 flex items-center gap-1 font-bold">
+                <Check className="w-3 h-3" />
+                <span>{isFa ? 'آماده اجرا' : 'Ready'}</span>
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1 font-sans">
+              {isFa
+                ? 'کدها به بخش «ترمینال و تغییرات کد» در سایدبار سمت راست منتقل شدند.'
+                : 'Code changes are live in the right sidebar under Terminal & Code Changes.'}
+            </p>
+          </div>
+        </div>
 
-        {/* Copy Button for code block */}
-        <button
-          type="button"
-          onClick={handleCopyCode}
-          className="px-2.5 py-1 rounded-lg bg-white/15 hover:bg-white/25 border border-white/30 text-sky-100 hover:text-white font-sans text-[10px] font-bold flex items-center gap-1 transition cursor-pointer active:scale-95"
-          title="کپی کردن این کد / Copy code"
-        >
-          {copied ? (
-            <>
-              <Check className="w-3.5 h-3.5 text-emerald-300" />
-              <span className="text-emerald-300 font-bold">کپی شد</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-3.5 h-3.5 text-sky-200" />
-              <span>کپی کد</span>
-            </>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 shrink-0" dir="ltr">
+          {onOpenTerminal && (
+            <button
+              type="button"
+              onClick={onOpenTerminal}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer active:scale-95"
+            >
+              <Terminal className="w-3.5 h-3.5" />
+              <span>{isFa ? 'مشاهده در ترمینال و تغییرات کد' : 'Open Terminal'}</span>
+            </button>
           )}
-        </button>
+
+          {onOpenPreview && (
+            <button
+              type="button"
+              onClick={onOpenPreview}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 text-xs font-semibold transition cursor-pointer active:scale-95"
+            >
+              <MonitorPlay className="w-3.5 h-3.5" />
+              <span>{isFa ? 'پیش‌نمایش زنده' : 'Preview'}</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleCopyCode}
+            className="p-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white border border-white/10 transition cursor-pointer active:scale-95"
+            title={isFa ? 'کپی کامل کد' : 'Copy Full Code'}
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowInline(!showInline)}
+            className="p-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-200 text-xs transition cursor-pointer border border-white/10"
+            title={showInline ? (isFa ? 'بستن پیش‌نمایش' : 'Hide') : (isFa ? 'مشاهده خلاصه کد' : 'Peek')}
+          >
+            {showInline ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
 
-      <pre className="p-3.5 overflow-x-auto whitespace-pre-wrap break-all font-mono text-slate-100 select-text bg-slate-950/50 max-h-[500px] overflow-y-auto">
-        {children}
-      </pre>
+      {/* Expandable Preview if user toggles */}
+      {showInline && (
+        <div className="p-3 bg-black/80 max-h-60 overflow-y-auto border-t border-white/10 text-[11px] font-mono text-slate-300 select-text" dir="ltr">
+          <pre className="whitespace-pre-wrap">{children}</pre>
+        </div>
+      )}
     </div>
   );
 }
@@ -93,6 +168,7 @@ interface Props {
   isExecuting: boolean;
   taskIntent?: 'chat' | 'coding';
   onOpenCodeDrawer?: () => void;
+  onOpenTerminal?: () => void;
   onOpenSettings?: () => void;
   onOpenSiriVoice?: () => void;
   isRecordingVoice?: boolean;
@@ -111,6 +187,9 @@ export function CodedAiChatCard({
   onSendMessage,
   isExecuting,
   taskIntent = 'chat',
+  onOpenCodeDrawer,
+  onOpenTerminal,
+  onOpenSettings,
   onOpenSiriVoice,
   isRecordingVoice = false,
   inputText: controlledInputText,
@@ -359,7 +438,15 @@ export function CodedAiChatCard({
                           {children}
                         </p>
                       ),
-                      pre: ({ children }) => <CodeBlockWithCopy>{children}</CodeBlockWithCopy>,
+                      pre: ({ children }) => (
+                        <CodeBlockWithCopy
+                          onOpenTerminal={onOpenTerminal}
+                          onOpenPreview={onTogglePreview}
+                          isFa={isRTL}
+                        >
+                          {children}
+                        </CodeBlockWithCopy>
+                      ),
                       code: ({ inline, className, children, ...props }: any) => {
                         const match = /language-(\w+)/.exec(className || '');
                         const isBlock = !inline && (match || (typeof children === 'string' && children.includes('\n')));

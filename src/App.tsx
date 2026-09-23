@@ -29,6 +29,7 @@ import { LocalBridgeModal } from './components/LocalBridgeModal';
 import { LiquidGlassBackground } from './components/LiquidGlassBackground';
 import { SiriLiveSpeakerOverlay } from './components/SiriLiveSpeakerOverlay';
 import { SoundtrackBar } from './components/SoundtrackBar';
+import { BillingModal } from './components/BillingModal';
 import { voiceAgent } from './services/voiceAgent';
 import {
   Sparkles,
@@ -72,6 +73,7 @@ export default function App() {
   const [isDiffOpen, setIsDiffOpen] = useState<boolean>(false);
   const [isWorkspacesOpen, setIsWorkspacesOpen] = useState<boolean>(false);
   const [isQueueOpen, setIsQueueOpen] = useState<boolean>(false);
+  const [isBillingOpen, setIsBillingOpen] = useState<boolean>(false);
   const [isSkillsOpen, setIsSkillsOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
@@ -444,24 +446,13 @@ export default function App() {
         {/* Left Sidebar */}
         <Sidebar
           onOpenQueue={() => setIsQueueOpen(!isQueueOpen)}
-          onOpenChanges={() => setIsDiffOpen(!isDiffOpen)}
-          onOpenWorkspaces={() => setIsWorkspacesOpen(!isWorkspacesOpen)}
-          onOpenEditor={() => {
-            if (isCodeDrawerOpen && codeDrawerTab === 'editor') {
-              setIsCodeDrawerOpen(false);
-            } else {
-              setCodeDrawerTab('editor');
-              setIsCodeDrawerOpen(true);
-            }
-          }}
           onOpenTerminal={() => setIsTerminalOpen(!isTerminalOpen)}
           onOpenPreview={toggleLivePreview}
+          onOpenBilling={() => setIsBillingOpen(!isBillingOpen)}
           onOpenFuel={() => setIsFuelActive(!isFuelActive)}
           isQueueActive={isQueueOpen}
-          isChangesActive={isDiffOpen}
-          isWorkspacesActive={isWorkspacesOpen}
-          isEditorActive={isCodeDrawerOpen && codeDrawerTab === 'editor'}
           isTerminalActive={isTerminalOpen}
+          isBillingActive={isBillingOpen}
           isFuelActive={isFuelActive}
           isPreviewActive={isPreviewOpen}
           isExecuting={isExecuting}
@@ -484,6 +475,7 @@ export default function App() {
                 isExecuting={isExecuting}
                 taskIntent={activeTaskIntent}
                 onOpenCodeDrawer={() => setIsCodeDrawerOpen(true)}
+                onOpenTerminal={() => setIsTerminalOpen(true)}
                 onOpenSettings={() => setIsSettingsOpen(true)}
                 onOpenSiriVoice={toggleVoiceRecording}
                 isRecordingVoice={isRecordingVoice}
@@ -637,6 +629,13 @@ export default function App() {
           language={language}
         />
       )}
+
+      {/* Billing & Subscriptions Modal (5h Free Daily & Upgrades) */}
+      <BillingModal
+        isOpen={isBillingOpen}
+        onClose={() => setIsBillingOpen(false)}
+        language={language}
+      />
     </div>
   );
 }
