@@ -18,6 +18,7 @@ import {
   Bot,
 } from 'lucide-react';
 import { Language, translations } from '../utils/translations';
+import { Message } from '../types';
 
 interface Props {
   isOpen: boolean;
@@ -25,6 +26,7 @@ interface Props {
   language: string;
   initialTab?: 'editor' | 'terminal' | 'files' | 'agents';
   hasCodeDiff?: boolean;
+  messages?: Message[];
   onRefreshWorkspace?: () => void;
   onSelectContextFile?: (path: string) => void;
 }
@@ -35,6 +37,7 @@ export function AnimatedCodeDrawer({
   language,
   initialTab = 'editor',
   hasCodeDiff = false,
+  messages = [],
   onRefreshWorkspace,
   onSelectContextFile,
 }: Props) {
@@ -200,7 +203,7 @@ export function AnimatedCodeDrawer({
 
               {activeTab === 'terminal' && (
                 <div className="w-full h-full p-2 sm:p-3 flex flex-col min-h-0">
-                  <TerminalPanel isOpen={true} onToggle={onClose} language={language} />
+                  <TerminalPanel isOpen={true} onToggle={onClose} language={language} messages={messages} />
                 </div>
               )}
 

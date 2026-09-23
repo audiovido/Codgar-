@@ -56,7 +56,7 @@ export default function ModernWebApp() {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <span className="font-extrabold text-lg tracking-tight text-white block">یه سایت مخصوص پت شاپ برام بزن که اسمش باشه ون</span>
+              <span className="font-extrabold text-lg tracking-tight text-white block">یه سایت مخصوص مصالح ساختمانی با تمام المان‌ها</span>
               <span className="text-[10px] text-blue-400 font-medium">طراحی اختصاصی و سفارشی‌سازی شده</span>
             </div>
           </div>
@@ -89,7 +89,7 @@ export default function ModernWebApp() {
           <span>پلتفرم مدرن و کاملاً واکنش‌گرا</span>
         </div>
         <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight mb-6 leading-tight max-w-3xl mx-auto">
-          یه سایت مخصوص پت شاپ برام بزن که اسمش باشه ون
+          یه سایت مخصوص مصالح ساختمانی با تمام المان‌ها
         </h1>
         <p className="text-base text-slate-400 max-w-2xl mx-auto mb-8 leading-relaxed">
           پیاده‌سازی شده با بهره‌گیری از بروزترین استانداردهای فرانت‌اند، طراحی تعاملی زنده و قابلیت شخصی‌سازی بالا.

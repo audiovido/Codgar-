@@ -514,6 +514,7 @@ export default function App() {
         onClose={() => setIsCodeDrawerOpen(false)}
         language={language}
         initialTab={codeDrawerTab}
+        messages={messages}
         onRefreshWorkspace={refreshWorkspaceData}
       />
 
@@ -534,7 +535,7 @@ export default function App() {
               </button>
             </div>
             <div className="flex-1 overflow-hidden">
-              <TerminalPanel isOpen={true} language={language} onToggle={() => setIsTerminalOpen(false)} />
+              <TerminalPanel isOpen={true} language={language} messages={messages} onToggle={() => setIsTerminalOpen(false)} />
             </div>
           </div>
         </div>

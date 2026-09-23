@@ -173,9 +173,9 @@ export function Sidebar({
     },
     {
       id: 'terminal',
-      title: isFa ? 'ترمینال کدها و اجرای دستورات' : 'Terminal & Execution Logs',
+      title: isFa ? 'ترمینال و تغییرات کد' : 'Terminal & Code Changes',
       enTitle: 'Terminal',
-      desc: isFa ? 'مشاهده ترمینال کدها، خروجی دستورات و لاگ‌های کامپایل' : 'View terminal logs, execution trace and run shell commands',
+      desc: isFa ? 'مشاهده کدهای تولیدشده، تاریخچه تغییرات و اجرای دستورات' : 'View generated code changes, execution logs & terminal commands',
       icon: <Terminal className="w-4 h-4" />,
       action: onOpenTerminal,
       badge: isFa ? 'ترمینال' : 'Terminal',
