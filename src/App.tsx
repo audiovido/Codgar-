@@ -28,7 +28,6 @@ import { LanguageSelectorModal } from './components/LanguageSelectorModal';
 import { LocalBridgeModal } from './components/LocalBridgeModal';
 import { LiquidGlassBackground } from './components/LiquidGlassBackground';
 import { SiriLiveSpeakerOverlay } from './components/SiriLiveSpeakerOverlay';
-import { SoundtrackBar } from './components/SoundtrackBar';
 import { BillingModal } from './components/BillingModal';
 import { voiceAgent } from './services/voiceAgent';
 import {
@@ -348,13 +347,8 @@ export default function App() {
 
       {/* Top Application Bar (Clean Product Showcase Liquid Glass Hero Bar) */}
       <header className="relative z-30 py-3 px-4 sm:px-6 min-h-[68px] border-b border-white/80 bg-white/55 backdrop-blur-3xl flex items-center justify-between shadow-xs transition-all">
-        {/* Left: Active Project/Workspace Badge */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white/70 border border-white/90 shadow-2xs text-xs font-sans font-bold text-slate-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{projectInfo?.name || (isFa ? 'محیط توسعه فعال' : 'Workspace Active')}</span>
-          </div>
-        </div>
+        {/* Left: Spacer to keep center alignment */}
+        <div className="hidden sm:flex items-center gap-3 shrink-0 w-28" />
 
         {/* Center: Hero Product Showcase Branding (کدگر / CODGAR) */}
         <div className="flex items-center justify-center my-auto py-1.5 px-3 select-none group cursor-pointer">
@@ -404,13 +398,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Right: Quick Actions & Soundtrack */}
+        {/* Right: Quick Actions */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Soundtrack Player */}
-          <div className="hidden lg:flex items-center">
-            <SoundtrackBar language={language} />
-          </div>
-
           {/* Enhanced Language Selector with Flag & Code */}
           <button
             onClick={() => setIsLanguageOpen(true)}

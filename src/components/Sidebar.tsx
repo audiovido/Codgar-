@@ -103,12 +103,14 @@ export function Sidebar({
       action: onOpenQueue,
       badge: isExecuting || queueCount > 0 ? (isExecuting ? t.running : `${queueCount}`) : undefined,
       badgeStyle: isExecuting
-        ? 'bg-amber-500/15 text-amber-700 border-amber-300 animate-pulse'
-        : 'bg-indigo-50 text-indigo-700 border-indigo-200/70',
-      iconContainerBg: 'bg-indigo-50/90 text-indigo-600 border-indigo-100',
+        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse'
+        : 'bg-indigo-950/80 text-indigo-300 border-indigo-700/50',
+      activeBtnBg: 'bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/35 ring-2 ring-indigo-400/80 scale-105',
+      activeInnerBg: 'bg-white/20 text-white border-white/40 shadow-inner',
+      inactiveInnerBg: 'bg-indigo-50/90 text-indigo-600 border-indigo-200/90 shadow-2xs group-hover/btn:border-indigo-400 group-hover/btn:bg-indigo-100',
       active: isQueueActive,
-      hasDot: false,
-      dotColor: isExecuting ? 'bg-amber-500' : 'bg-indigo-500',
+      hasDot: isExecuting,
+      dotColor: 'bg-amber-400',
     },
     {
       id: 'terminal',
@@ -117,13 +119,13 @@ export function Sidebar({
       desc: isFa ? 'مشاهده کدهای تولیدشده، تاریخچه تغییرات و اجرای دستورات' : 'View generated code changes, execution logs & terminal commands',
       icon: <Terminal className="w-4 h-4" />,
       action: onOpenTerminal,
-      badge: isFa ? 'ترمینال' : 'Terminal',
+      badge: isFa ? 'ترمینال فعال' : 'Terminal Active',
       badgeStyle: isTerminalActive
-        ? 'bg-emerald-500 text-white border-emerald-400 shadow-xs animate-pulse font-bold'
+        ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400/60 font-bold'
         : 'bg-slate-900 text-emerald-400 border-slate-700',
-      iconContainerBg: isTerminalActive
-        ? 'bg-emerald-500 text-white border-emerald-400 shadow-xs'
-        : 'bg-slate-900 text-emerald-400 border-slate-700 shadow-2xs',
+      activeBtnBg: 'bg-gradient-to-tr from-slate-950 via-slate-900 to-[#07172b] text-emerald-400 shadow-lg shadow-emerald-500/30 ring-2 ring-emerald-400 scale-105 border border-emerald-500/40',
+      activeInnerBg: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/60 shadow-inner',
+      inactiveInnerBg: 'bg-[#080f1d] text-emerald-400 border-slate-700/80 shadow-2xs group-hover/btn:border-emerald-500/50 group-hover/btn:shadow-emerald-500/10',
       active: isTerminalActive,
       hasDot: isTerminalActive,
       dotColor: 'bg-emerald-400',
@@ -135,16 +137,16 @@ export function Sidebar({
       desc: isFa ? 'مشاهده زنده سایت و برنامه‌های ساخته شده' : 'Interactive live rendering of built apps & components',
       icon: <MonitorPlay className="w-4 h-4" />,
       action: onOpenPreview,
-      badge: 'Live',
+      badge: 'Live Sandbox',
       badgeStyle: isPreviewActive
-        ? 'bg-emerald-500 text-white border-emerald-400 shadow-xs animate-pulse font-bold'
-        : 'bg-emerald-50/90 text-emerald-700 border-emerald-200',
-      iconContainerBg: isPreviewActive
-        ? 'bg-emerald-500 text-white border-emerald-400 shadow-xs'
-        : 'bg-emerald-50/90 text-emerald-600 border-emerald-100',
+        ? 'bg-teal-500/25 text-teal-300 border-teal-400/60 font-bold'
+        : 'bg-emerald-950/80 text-emerald-300 border-emerald-700/50',
+      activeBtnBg: 'bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 text-slate-950 shadow-lg shadow-teal-500/35 ring-2 ring-emerald-300 scale-105 font-bold',
+      activeInnerBg: 'bg-white/30 text-slate-950 border-white/50 shadow-inner',
+      inactiveInnerBg: 'bg-teal-50/90 text-teal-600 border-teal-200/90 shadow-2xs group-hover/btn:border-teal-400 group-hover/btn:bg-teal-100',
       active: isPreviewActive,
-      hasDot: false,
-      dotColor: 'bg-emerald-500',
+      hasDot: isPreviewActive,
+      dotColor: 'bg-teal-400',
     },
     {
       id: 'billing',
@@ -153,13 +155,13 @@ export function Sidebar({
       desc: isFa ? '۵ ساعت رایگان روزانه، خرید ساعت بیشتر و پلن‌های نامحدود' : '5h free daily, buy extra hours & unlimited AI plans',
       icon: <CreditCard className="w-4 h-4" />,
       action: onOpenBilling,
-      badge: isFa ? '۵ساعت فری' : '5h Free',
+      badge: isFa ? '۵ ساعت رایگان' : '5h Free Daily',
       badgeStyle: isBillingActive
-        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold border-emerald-400 shadow-xs'
-        : 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',
-      iconContainerBg: isBillingActive
-        ? 'bg-gradient-to-tr from-emerald-500 to-teal-400 text-slate-950 border-emerald-400 shadow-xs'
-        : 'bg-emerald-50/90 text-emerald-700 border-emerald-200 shadow-2xs',
+        ? 'bg-amber-500/25 text-amber-300 border-amber-400/60 font-bold'
+        : 'bg-amber-950/80 text-amber-300 border-amber-700/50 font-bold',
+      activeBtnBg: 'bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 text-white shadow-lg shadow-amber-500/35 ring-2 ring-amber-300 scale-105',
+      activeInnerBg: 'bg-white/25 text-white border-white/40 shadow-inner',
+      inactiveInnerBg: 'bg-amber-50/90 text-amber-600 border-amber-200/90 shadow-2xs group-hover/btn:border-amber-400 group-hover/btn:bg-amber-100',
       active: isBillingActive,
       hasDot: true,
       dotColor: 'bg-emerald-400',
@@ -171,16 +173,16 @@ export function Sidebar({
       desc: t.fuelAndModelsDesc,
       icon: <Fuel className="w-4 h-4" />,
       action: onOpenFuel,
-      badge: '100%',
+      badge: '100% Ready',
       badgeStyle: isFuelActive
-        ? 'bg-amber-500 text-white border-amber-400 shadow-xs'
-        : 'bg-amber-50 text-amber-700 border-amber-200/70',
-      iconContainerBg: isFuelActive
-        ? 'bg-amber-500 text-white border-amber-400 shadow-xs'
-        : 'bg-amber-50/90 text-amber-600 border-amber-100',
+        ? 'bg-orange-500/25 text-orange-300 border-orange-400/60 font-bold'
+        : 'bg-orange-950/80 text-orange-300 border-orange-700/50',
+      activeBtnBg: 'bg-gradient-to-tr from-orange-500 via-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/35 ring-2 ring-rose-300 scale-105',
+      activeInnerBg: 'bg-white/20 text-white border-white/40 shadow-inner',
+      inactiveInnerBg: 'bg-orange-50/90 text-orange-600 border-orange-200/90 shadow-2xs group-hover/btn:border-orange-400 group-hover/btn:bg-orange-100',
       active: isFuelActive,
       hasDot: false,
-      dotColor: 'bg-amber-500',
+      dotColor: 'bg-orange-400',
     },
   ];
 
@@ -189,29 +191,29 @@ export function Sidebar({
       id="freebuff-sidebar"
       className={`h-auto my-auto ${
         isFa ? 'mr-2 sm:mr-4 ml-0' : 'ml-2 sm:ml-4 mr-0'
-      } rounded-[28px] ice-glass-dock flex flex-col items-center justify-center shadow-2xl z-40 select-none pointer-events-auto border border-white/95 backdrop-blur-2xl shrink-0 w-14 sm:w-16 py-3 px-1.5 sm:px-2`}
+      } rounded-[30px] ice-glass-dock flex flex-col items-center justify-center shadow-[0_18px_50px_rgba(0,0,0,0.14)] z-40 select-none pointer-events-auto border border-white/95 backdrop-blur-2xl shrink-0 w-14 sm:w-16 py-3.5 px-1.5 sm:px-2`}
       dir={isFa ? 'rtl' : 'ltr'}
     >
       {/* Navigation List */}
-      <div className="w-full flex flex-col gap-1.5 relative items-center">
+      <div className="w-full flex flex-col gap-2 relative items-center">
         {navSections.map((item) => {
           return (
             <div key={item.id} className="relative group/nav flex items-center justify-center w-full">
               <button
                 type="button"
                 onClick={item.action}
-                className={`relative w-10 h-10 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-90 ${
+                className={`relative w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center transition-all duration-300 cursor-pointer active:scale-95 group/btn ${
                   item.active
-                    ? 'shadow-md shadow-emerald-500/20 scale-105'
-                    : 'hover:scale-102 hover:shadow-sm'
+                    ? item.activeBtnBg
+                    : 'ice-glass-btn text-slate-700 hover:bg-white hover:shadow-md'
                 }`}
               >
-                {/* 3D Glass Surface */}
+                {/* Micro Icon Squircle Container */}
                 <div
-                  className={`w-full h-full rounded-2xl flex items-center justify-center border transition-all duration-300 ${
+                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-all duration-300 shrink-0 border ${
                     item.active
-                      ? item.iconContainerBg
-                      : 'bg-white/80 text-slate-600 border-white/90 hover:bg-white hover:text-blue-600 hover:border-blue-200'
+                      ? item.activeInnerBg
+                      : `${item.inactiveInnerBg} group-hover/btn:scale-108`
                   }`}
                 >
                   {item.icon}
@@ -225,30 +227,35 @@ export function Sidebar({
                 )}
               </button>
 
-              {/* Flyout Tooltip Card */}
+              {/* High-Tech Crystal Floating Tooltip Card */}
               <div
                 className={`absolute ${
                   isFa
                     ? 'right-full mr-3.5 origin-right'
                     : 'left-full ml-3.5 origin-left'
-                } top-1/2 -translate-y-1/2 pointer-events-none opacity-0 translate-x-1 group-hover/nav:translate-x-0 group-hover/nav:opacity-100 transition-all duration-200 z-50`}
+                } top-1/2 -translate-y-1/2 pointer-events-none opacity-0 translate-x-1 group-hover/nav:translate-x-0 group-hover/nav:opacity-100 transition-all duration-200 z-[100]`}
+                dir={isFa ? 'rtl' : 'ltr'}
               >
-                <div className="ice-glass-card rounded-2xl p-2.5 px-3 shadow-xl border border-white/90 min-w-[170px] max-w-[220px]">
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="font-bold text-slate-800 text-xs tracking-tight">
+                <div className="rounded-2xl p-3 bg-slate-950/95 text-white shadow-2xl border border-white/20 backdrop-blur-2xl min-w-[180px] max-w-[230px] ring-1 ring-black/50">
+                  <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5 mb-1.5">
+                    <span className="font-bold text-white text-xs tracking-tight">
                       {item.title}
                     </span>
-                    {item.badge && (
-                      <span
-                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${item.badgeStyle}`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
+                    <span className="text-[10px] font-mono text-cyan-300 font-bold opacity-80">
+                      {item.enTitle}
+                    </span>
                   </div>
-                  <p className="text-[10px] text-slate-500 leading-tight">
+                  <p className="text-[10px] text-slate-300 leading-snug">
                     {item.desc}
                   </p>
+                  {item.badge && (
+                    <div className="mt-2 pt-1.5 border-t border-white/10 flex items-center justify-between text-[10px]">
+                      <span className="text-slate-400">{isFa ? 'وضعیت:' : 'Status:'}</span>
+                      <span className={`px-1.5 py-0.5 rounded-md border font-mono font-bold text-[9px] ${item.badgeStyle}`}>
+                        {item.badge}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
